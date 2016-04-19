@@ -1,0 +1,41 @@
+\chapter{Suggested literature}\label{cha:lit}
+The following sources have been perused and investigated at the time of writing
+and are intended to lay the foundation and present the initial plan of attack for
+the problem.
+
+\begin{itemize}
+
+  \item flex, Matthias Muller et.al \newline
+  A promising new technique from Nvidia. With a few exceptions the rigid body
+  simulation uses the same approach as the one described in GPU Gems 3.
+
+  \item GPU Gems 3, Chapter 29 Real-Time Rigid Body Simulation on GPUs \newline
+  Voxelize the body into spheres. Solve the collisions as sphere-sphere collisions
+  on the GPU. Binning the particles reduces the search time to O(n) instead of O($n^2$)
+
+  \item Real-Time Rigid Body Interactions, Fredrik Fossum \newline
+  An implementation heavily inspired by the GPU Gems 3 approach.
+
+  \item Particle Simulation using CUDA, Simon Green \newline
+  Some details on how to bin particles on the GPU.
+
+  \item Polygons feel no pain, Ingemar Ragnemalm \newline
+  For references to loads of useful 3D graphics core concepts.
+
+  \item ...So How Can We Make Them Scream?, Ingemar Ragnemalm \newline
+  Includes rigid body animation, Stencil buffers, GPGPU basics, quaternions and
+  numerical integration techniques.
+
+\end{itemize}
+
+The following sources below are more leaned towards Bullet Physics. Bullet Physics'
+experimental version 3.x include a GPU version of Rigid Body simulations which
+might solve the problem very well. This would be interesting to investigate and
+compare to the method(s) in the sources above.
+
+\begin{itemize}
+
+  \item GPU Rigid Body Simulation, Erwin Coumans \newline
+  GDC presentation concerning BulletPhysics RigidBody GPU pipeline.
+
+\end{itemize}
