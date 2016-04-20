@@ -1,17 +1,41 @@
 \chapter{Conclusion and future work}
 \section{Conclusion}
+\subsection{HACD}
+In this thesis as a baseline comparison a well established open source physics engine
+(Bullet) has been used to simulate concave objects through Hierarchical approximate
+ convex decomposition. This method has been investigated previously and there were
+ indications that it would produce good results. It has therefore been implemented
+ and tested for the purpose of acting as a baseline comparison.
+
+As suspected the Bullet with HACD produces good result with decent performance and
+the method includes very few design parameters. The approach with using HACD gives
+a robust and easily managed solution, with the only drawback being that the HACD
+may produce unexpected results for certain meshes. However, when this does happen
+one always have the alternative to design the sub shapes by hand in external applications.
+
+\subsection{Spherical decomposition}
 In this thesis I have shown that a physics simulation based on impulses with
 calculations performed on the GPU is possible. Certain performance optimizations
 have been implemented but there are as always still more to have if more time is
-spent on the problem. In terms of performance the solution can match of the shelf
+spent on the problem. In terms of performance the proposed solution can match of the shelf
 solutions (in the form of Bullet 2.86), when an object is decomposed into fewer than
 218 particles.
 
+The solution shows good promise, in addition to the results presented within this
+thesis report is the release of Flex by~\cite{flex} at nVidia
+during the course of the thesis, which uses some of the same core concepts.
+
+Compared to HACD, voxelization is more intuitive and results are easier to modify
+when needed. GPU code is in general more difficult to maintain than a CPU implementation.
+
 \section{Future work}
+In addition to pure optimization work which can almost always be done for almost any piece
+of software the following are suggestions for future work and improvements.
+
 Investigating the use of Shock Propagation as an alternative to the current scheme
 were the velocity and impulse steps are reiterated.
 
-Other methods of resolving the interpenetration could be a point of future work.
+Other methods of resolving the interpenetration could be investigated.
 
 Making use of non-uniform structures such as oct-trees or kd-trees for the collision
 detection, which would make the structure scale better with objects spread across
@@ -25,9 +49,7 @@ Remove particles which belong to non-colliding bodies and redo the collision det
 on all remaining particles. In addition this method would support differently sized
 particles better than the current one.
 
-Investigate further optimizations to the velocity and impulse shader as they scale poorly.
-
-he collision carrier structure, the contact manifold, currently only carries
+The collision carrier structure, the contact manifold, currently only carries
 4 collisions per particle. This limits the system in two ways, the system can miss
 collisions when more than 4 collisions occur simultaneously on a particle and the
 system is unfit to use differently sized particles. The larger particles would
