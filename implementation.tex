@@ -274,6 +274,7 @@ in the velocity step. By not simply accumulate the forces in the sphere and keep
 both the impulse and the direction we can reconstruct the collision point when updating
 the velocity, this becomes extra important for low resolution decompositions.
 
+
 \subsection{Velocity Update}
 This shader step dispatches across all bodies instead of across the particles, this
 is necessary as we need to sum all the impulses from all the particles in the body.
@@ -284,6 +285,45 @@ those should be removed to increase performance of this shader step.
 % Since OpenGL 4.5 do not always support dynamic length for loops the loop is coded
 % to be very long, say 4096, and exit through a break when the final sphere of the body
 % is reached.
+
+Initially the workload of calculating the torque and linear moment was left up to the velocity shader,
+this meant that fewer workgroups were issued and each workgroup had to do increasing
+amount of work and the parallelism of the GPU was utilized poorly. A new shader as
+a pre-velocity step was added were the calculations for the velocity was performed
+on a per particle basis and the much faster shared memory was utilized to avoid
+read-write collisions. Each workgroup gets a shared array with enough space to save
+each particles' torque and linear moments. For the initial implementation the scaling of
+the velocity step was very poor. For the tests the amount of particles in total in the
+system was kept constant but the amount of particles per body increases for each test.
+This results in fewer bodies in total for each new test. The results can be seen in figure~\ref{fig:velScale1}.
+For the more workload aware implementation the results can be seen in~\ref{fig:velScale2}.
+As one can easily see the latter scales much more reasonably.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width = 0.9\textwidth]{particlePerBody.png}
+  \caption{Poor scaling for the velocity step with increasing number of particles per body.}
+  \label{fig:velScale1}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width = 0.9\textwidth]{particlePerBody.png} %particlePerBody2.png
+  \caption{CHANGE TO CORRECT IMAGE!! Improved workload gives reasonable scaling for the velocity step with increasing number of particles per body.}
+  \label{fig:velScale2}
+\end{figure}
+
+The flowchart is updated accordingly to what can be seen in figure~\ref{fig:shaderflow2}.
+The calculations performed in the velocity pre-calculation step could just as easily
+be implemented into the impulse shader step instead, but has been given a separate shader
+step for readability.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width = 0.9\textwidth]{shaderflow2.png}
+  \caption{Updated flow chart with pre-velocity calculations per particle}
+  \label{fig:shaderflow2}
+\end{figure}
 
 \subsection{Position Update}
 This shader updates the bodies' states through integration as described in the theory chapter.
