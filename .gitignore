@@ -1,0 +1,16 @@
+###LaTeX ignores###
+*.pdf
+*.bbl
+*.blg
+*.brf
+*.fdb_latexmk
+*.cls
+*.fls
+*.idx
+*.ilg
+*.ind
+*.log
+*.out
+*.toc
+*.sty
+*.DS_Store
