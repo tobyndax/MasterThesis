@@ -6,7 +6,7 @@ be discussed and performance testing will be presented.
 Since different shaders is impacted differently by different problems a few performance
 test-series has been performed and will be discussed below.
 For all tests, cubes have been used as the object being approximated and they
-are being dropped into a bin consiting of static particles. For complete data collected and
+are being dropped into a bin consisting of static particles. For complete data collected and
 settings used see appendix~\ref{app:test}.
 
 The times presented for velocity and impulse (who are both iterated ten times per update)
@@ -20,11 +20,11 @@ in total is kept constant. For all three series some particles from the bin had 
 either added or removed to keep the total equal between the tests.
 \begin{figure}[H]
   \centering
-  \includegraphics[width = 0.8\textwidth]{particlePerBody.png}
+  \includegraphics[width = 0.8\textwidth]{particlePerBody2.png}
   \caption{Chart of performance of each of the shader steps for increasing number of particles per body.}
   \label{fig:particlePerBody}
 \end{figure}
-As we can see the velocity shader scales very poorly with the number of particles
+As we can see the velocity shader time increase with the number of particles
 within a body. This is not surprising as the shader performs a gather scheme for
 summation of the impulses. The shader will perform a number of global reads proportional
 against the number of particles in the body per thread.
