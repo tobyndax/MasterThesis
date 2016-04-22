@@ -13,4 +13,5 @@
 *.out
 *.toc
 *.sty
+!mythesis.sty
 *.DS_Store
