@@ -12,7 +12,8 @@ decomposed in this manner see figure~\ref{fig:bunnies}.
 \begin{figure}[H]
   \centering
   \includegraphics[width = 0.9\textwidth]{flexBunnies.png}
-  \caption{Varying degrees of spherical decomposition of the Stanford bunny. Image collected from the flex paper by~\cite{flex}}
+  \caption{Varying degrees of spherical decomposition of the Stanford bunny.
+  Image collected from the flex paper by~\cite{flex}}
   \label{fig:bunnies}
 \end{figure}
 
@@ -95,18 +96,18 @@ be an M-by-M matrix where only M/2-M elements are required (where M is the
 number of bodies). This reduction in size
 has not been implemented, and instead the full M-by-M matrix is used.
 
-A reasonable location in the shader stages for adding the collision are during
+A reasonable location in the shader stages for adding the collisions are during
 the collision detection shader, each detected collision increments $C_{i,j}$
-when a collision is detected, through an atomic increment. A drawback of the atomic
+ through an atomic increment. A drawback of the atomic
  operations are that they may affect the performance of shaders negatively. In
- other words, the benefit that a algorithm comes with have to outweigh the potentially
+ other words, the benefit that an algorithm comes with have to outweigh the potentially
  slow atomic operations.
 
 \section{Collision Detection}
 Initially a brute force collision detection was tested. With $O(n^2)$ it was too
-slow and had poor scaling as expected. ~\cite{gpugems} suggest spatial partitioning
+slow and had poor scaling as expected. ~\cite{gpugems} suggests spatial partitioning
 by ways of a uniform grid for collision detection. This method is especially suitable
-for the spherical decomposition since for fixed sphere radius we can select a optimized
+for the spherical decomposition since for fixed sphere radius we can select an optimized
 grid size. In addition both~\cite{gpugems} and~\cite{fastnearest} claim that sorting
 the collisions by bin number increases memory coherence and overall performance.
 
@@ -191,7 +192,7 @@ parallel system. In the best case the execution time of the whole system would b
 the slowest path in total through the system. This is not however always the case
 since not all particles can execute in parallel.
 
-\section{Stabilization iterations}
+\section{Stabilization iterations} \label{sec:stabil}
 The velocity and impulse step are iterated several times to stabilize and solve
 interpenetrations by a percentage of the distance as previously described.
 
@@ -211,9 +212,7 @@ the figure leaves some space between them for easier reading of the figure.
 \end{figure}
 
 Unfortunately with higher stacking and increased number of objects in tight proximity,
-the number of iterations needed increase. A quite likely replacement candidate is
-the approximate shock propagation method described by~\cite{flex} or the original
-shock propagation method proposed by~\cite{guendelman}.
+the number of iterations needed increase or a smaller time step is needed.
 
 \section{Shader structure}
 For this implementation OpenGL 4.5 with Compute Shaders are used as the interface
@@ -308,8 +307,8 @@ As one can easily see the latter scales much more reasonably.
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width = 0.9\textwidth]{particlePerBody.png} %particlePerBody2.png
-  \caption{CHANGE TO CORRECT IMAGE!! Improved workload gives reasonable scaling for the velocity step with increasing number of particles per body.}
+  \includegraphics[width = 0.9\textwidth]{particlePerBody2.png}
+  \caption{Improved workload gives reasonable scaling for the velocity step with increasing number of particles per body.}
   \label{fig:velScale2}
 \end{figure}
 

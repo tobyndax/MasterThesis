@@ -32,10 +32,11 @@ when needed. GPU code is in general more difficult to maintain than a CPU implem
 In addition to pure optimization work which can almost always be done for almost any piece
 of software the following are suggestions for future work and improvements.
 
-Investigating the use of Shock Propagation as an alternative to the current scheme
-were the velocity and impulse steps are reiterated.
-
-Other methods of resolving the interpenetration could be investigated.
+The number of iterations needed for stability increase with increased stack sizes.
+The reasons for this is motivated in section~\ref{sec:stabil}.
+Two candidates to replace the stabilization iterations are
+the approximate shock propagation method described by~\cite{flex} or the original
+shock propagation method proposed by~\cite{guendelman}.
 
 Making use of non-uniform structures such as oct-trees or kd-trees for the collision
 detection, which would make the structure scale better with objects spread across
