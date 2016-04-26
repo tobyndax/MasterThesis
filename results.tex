@@ -97,10 +97,26 @@ This is cheaper than increasing the grid size from 32 to 128, which gives an inc
 \subsection{Large scale system}
 With a system consisting of 1024 dynamic bodies with 218 particles per body
  and a total of 254348 particles (including
-static ones), we get about 103 ms per frame. Which can be compared to Bullet's HACD.
+static ones), we get about 103 ms per frame, which is comparable to Bullet's HACD.
 The velocity step is by far the most time consuming step, using around half of the total time with
 the impulse step at a second place with about a third of the time. Once again due
 to them having to be reiterated 10 times.
+
+\subsection{Modified Normals}
+Even small deviations from the sphere's normals towards the original normals quickly
+led to tunneling when bodies stacked. Single bodies on a plane and similar situations
+did perform reasonable. Small local changes seem to lead to the system overall not
+separating the spheres properly and the idea of modified
+normals seem unlikely to succeed.
+
+\subsection{Tighter voxelization}
+Tighter voxelization led to better collision result since the surface is modeled
+more accurately, in addition one could decrease the number of iterations needed
+for tunnel prevention and stability. This is most likely due to the reduce depth
+of the indentations between particles which lead to the normals and resulting forces more often
+being directed outwards from the object with a lesser angle.
+ With deep indentations between particles the forces will angled more steeply and
+  some of the force will not be used for separating the objects.
 
 \section{Limitations}
 \subsection{Per body particle limit}
@@ -160,6 +176,6 @@ As presented we can simulate 1024 bodies of 218 particles at 100 ms, which is co
 
 \subsection{Correctness}
 Correctness for spherical decomposition depend highly on how finely the model is
-decomposed, much like how Bullet's HACD depend on how many vertices is allowed
+decomposed, much like how Bullet's HACD depends on how many vertices is allowed
 per model. Boxes with as low as 27 particles looks convincing, but e.g. a Utah Teapot
 may need many more particles to produce convincing results.

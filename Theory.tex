@@ -288,17 +288,28 @@ inertia tensor. According to~\cite{ragnemalmscream} we can, when the objects ini
 position is aligned with the objects principal axes, always write the inertia tensor
 as a diagonal matrix.
 
-PLACEHOLDER FOR SOME DETAILS CONCERNING THEORETICAL INERTIA.
-
 By voxelizing the object which we seek the inertia tensor of and treating each voxel
 as a point mass during the calculation we can sum over all the point masses and reach
 an approximation of the inertia tensor. The method can be found described in
- 'So How Can We Make Them Scream' by~\cite{ragnemalmscream}. This method gets quite
+ 'So How Can We Make Them Scream' by~\cite{ragnemalmscream}.
+J can be calculated as following.
+
+ \begin{equation}
+  \vec{J} = \sum_i
+  \begin{bmatrix}
+    m_i(r_{iy}^2 + r_{iz}^2) & -m_ir_{ix}r_{iy} & -m_ir_{ix}r_{iz} \\
+    -m_ir_{ix}r_{iy} & m_i(r_{ix}^2 + r_{iz}^2) & -m_ir_{iy}r_{iz} \\
+    -m_ir_{ix}r_{iz} & -m_ir_{iy}r_{iz} & m_i(r_{ix}^2 + r_{iy}^2) \\
+  \end{bmatrix}
+ \end{equation}
+
+ This method gets quite
  good results but is of course dependent on how finely one decomposes the object.
  Below is a comparison of theoretical versus approximated inertia tensor of a cube.
  Only one of the three diagonal components are presented since the object is symmetrical
  along all three axes the inertia tensor will have the same value along the diagonal.
  One can note that the inertia reaches a reasonable approximation quite quickly.
+
 
  \begin{figure}[H]
    \centering

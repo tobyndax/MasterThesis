@@ -1,6 +1,6 @@
 \chapter{Introduction}\label{cha:intro}
 
-\section{Purpose}
+\section{Motivation}
 
 Synthetic data generation is a subject with increasingly high relevance.
 The data can be used for training and validation of self-learning systems,
@@ -9,21 +9,28 @@ based problems. Solving methods for high speed eneration of these datasets
 can greatly increase the productivity and development of these
 types of algorithms.
 
-For this purpose this thesis will investigate the use of physics
-simulation for part distribution. The situation investigate in this thesis
+\section{Purpose}
+
+For the purpose of generating synthethic data this thesis will investigate the use of physics
+simulation for part distribution. The situation investigated in this thesis
 is when several, identical models is  'poured' into a bin and simulated for their
 final resting distribution. In figure~\ref{fig:plb}, the situation
 the thesis aims to simulate is visualized. Only the distribution of the parts
 will be simulated, i.e. the arm will not be simulated. For these simulations
 performance is of high interest as generation of large amounts of data generation
-is one of the key aspects.
+is one of the key aspects. Due to the interest for performance a GPU method will
+be investigated and compared to a more traditional CPU based solution.
 
 \begin{figure}[ht]
   \centering
   \includegraphics[width = 0.6\textwidth]{plb.png}
-  \caption{The PLB system with parts in bin, which the thesis aims to reproduce.~\cite{fig:plb}}
+  \caption{Bin with parts in, here represented in 2D}
   \label{fig:plb}
 \end{figure}
+
+\section{Problem Statement}
+How can a GPU rigid body solver be realised and used for synthetic data generation
+ and how does it compare against Bullet?
 
 \section{Limitations}
 Since the system is somewhat chaotic in nature, deviations from a high accuracy
@@ -39,6 +46,7 @@ Initially the Rigid-body GPU pipeline of Bullet 3.x was to be investigated, howe
 it has become apparent that the implementation was more or less abandoned in 2013
 when Erwin Coumans started working for Google instead of AMD. While operational,
 no API for it exists. Due to it's state it is excluded from the thesis.
+A self-implemented GPU rigid body solver will be implemented and compared to Bullet.
 
 \section{Methodology}
 Validation for physics simulations is a very difficult topic. Since the aim for

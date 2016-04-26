@@ -12,10 +12,20 @@ decomposed in this manner see figure~\ref{fig:bunnies}.
 \begin{figure}[H]
   \centering
   \includegraphics[width = 0.9\textwidth]{flexBunnies.png}
-  \caption{Varying degrees of spherical decomposition of the Stanford bunny.
-  Image collected from the flex paper by~\cite{flex}}
+  \caption{Varying degrees of spherical decomposition of the Stanford bunny.}
   \label{fig:bunnies}
 \end{figure}
+
+\subsection{Modified Normals}
+Since the particles can be seen as a type of collision proxy shape for the true object,
+it is reasonable to investigate what would happen if instead of the sphere's normals,
+the original object's normals were used for collision resolution. Or if a weighted
+average of the sphere's and the object's normals were used.
+\subsection{Tighter voxelization}
+By tightening the voxelization, while still using the same radius on the particles,
+i.e. let the particles overlap within the body, we effectively change the surface
+normals, overall this will lead to a smoother surface at the cost of increasing the number
+of particles needed.
 
 \section{Multiple contacts in sequential solvers}
 When solving with multiple contacts between a body pair one can rewind time to
