@@ -117,6 +117,11 @@ of the indentations between particles which lead to the normals and resulting fo
 being directed outwards from the object with a lesser angle.
  With deep indentations between particles the forces will angled more steeply and
   some of the force will not be used for separating the objects.
+This method will take a penalty to the collision detection shader step in
+terms of performance since many of the bodies own particles will register as collisions
+for the tighter voxelization. During testing the benefit of lowering the number of
+stabilization iterations greatly outweighed the extra time needed in the collision
+detection.
 
 \section{Limitations}
 \subsection{Per body particle limit}
