@@ -1,0 +1,7 @@
+Changelog from draft 0.1 to draft 0.2
+
+*Some spelling corrections
+*Added section on modified normals
+*Added section on tightened voxelization
+*Remade images with better bin color
+*Removed unnessecary image on finished simulation at end of bounding box chapter.

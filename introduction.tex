@@ -5,7 +5,7 @@
 Synthetic data generation is a subject with increasingly high relevance.
 The data can be used for training and validation of self-learning systems,
 something which is becoming increasingly more popular and useful within vision
-based problems. Solving methods for high speed eneration of these datasets
+based problems. Solving methods for high speed generation of these datasets
 can greatly increase the productivity and development of these
 types of algorithms.
 
@@ -16,7 +16,7 @@ simulation for part distribution. The situation investigated in this thesis
 is when several, identical models is  'poured' into a bin and simulated for their
 final resting distribution. In figure~\ref{fig:plb}, the situation
 the thesis aims to simulate is visualized. Only the distribution of the parts
-will be simulated, i.e. the arm will not be simulated. For these simulations
+will be simulated, i.e. the robotic arm and gripper used for picking the parts will not be simulated. For these simulations
 performance is of high interest as generation of large amounts of data generation
 is one of the key aspects. Due to the interest for performance a GPU method will
 be investigated and compared to a more traditional CPU based solution.
@@ -52,7 +52,7 @@ A self-implemented GPU rigid body solver will be implemented and compared to Bul
 Validation for physics simulations is a very difficult topic. Since the aim for
 the thesis is to produce realistic enough distributions we do not need to focus
 on absolutely realistic results but can instead evaluate the results in terms of
-a few key properties. Of interest is: performance, since the more images
+a few key properties. Of interest are: performance, since the more images
 that can be generated the better the chances of finding rare problems; correctness,
 as the simulations need to be relatively correct to give rise to the problems that
  happen in real life scenarios; concave collision, since the objects might
