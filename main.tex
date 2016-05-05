@@ -36,23 +36,20 @@ noparts% Use option 'noparts' if you do not make use of part divisions.
   %  \input{engelsk-sammanfattning}
   %\end{abstract}
 
-  %\include{tack}
   \tableofcontents
-  %\include{notation}
 
   \mainmatter
   \raggedbottom
 
   \include{introduction}
-  \include{Theory}
+  \include{Theory} %background
+  \include{related}
   \include{bullet1}
   \include{hacd}
   \include{implementation}
   \include{results}
   \include{conclusion}
 
-  %\include{literature}
-  %\include{avrundning}
 
   \part*{Appendix}
   \appendix
@@ -61,7 +58,7 @@ noparts% Use option 'noparts' if you do not make use of part divisions.
 
   \backmatter
 
-  % \nocite{*}
+  \nocite{*}
   \bibliography{IEEEfull,myrefs}
 
   \printindex

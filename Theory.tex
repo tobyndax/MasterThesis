@@ -65,46 +65,6 @@ forward. The update for the quaternions are based on the description given by~\c
   \vec{x}_{t + \Delta t} = \vec{x}_{t} + \vec{v}_t\Delta t
 \end{equation}
 
-\section{Spring-damper model}
-Spring-damper model is the model for collision response described in~\cite{gpugems}.
-The model has the benefit of being quite easy to implement on both CPU and GPU.
-However, since there are two design parameters, the spring coefficient and the damping
-constant, the system can be hard to tune. Often a parameter constellation that works
-fine for one system will fail for another.
-% Usually one need very small
-% time steps as well since it does not handle interpenetration particularly gracefully.
-% The system can give rise to mushy physics, hard spheres colliding with each other
-% slow down, inter-penetrate, then accelerate outwards from each other.
-
-The equations below describe how the force and torque can be derived for this type
-of model. The equations describe the forces for collision between sphere i and j,
-where k is the spring constant, c the damping constant and d the
-diameter of the sphere. In equation~\ref{eq:tangent}, $\hat{r}$ refers to the
-position of the particle relative to the body's center.
-
-\begin{equation}
-  \vec{f}_{i,spring} = -k(d-|\vec{r}_{ij}|)\frac{\vec{r}_{ij}}{|\vec{r}_{ij}|}
-\end{equation}
-
-\begin{equation}
-  \vec{f}_{i,damping} = -c\vec{v}_{ij}
-\end{equation}
-
-\begin{equation}
-  \vec{v}_{ij} = \vec{v}_{particle} + \vec{v}_{tangential}
-\end{equation}
-
-\begin{equation}\label{eq:tangent}
-  \vec{v}_{tangential} = \vec{\omega} \cross ( \vec{r}- \vec{\omega}\bullet\frac{\vec{\omega}}{|\vec{\omega}^2|})
-\end{equation}
-
-Note that the equations above are mass independent which might be one of the
-reasons for it's common use with the particle method.
-
-This method has two unknown parameters, c and k, which must be tuned for the
-specific system for stability. Often this parameter is decided through testing
-and the tests need to be redone for new setups.
-
 \section{Impulse method}\label{sec:imp}
 To use the impulse method we need to solve the impulse j. ~\cite{baraff} explains the details
 and derivations of the results below and I recommend the interested reader to look through
@@ -258,26 +218,6 @@ With this, equation~\ref{eq:j} is modified to read the following.
   {m_A^{-1}+m_B^{-1}+\vec{\hat{n}}\bullet(\vec{I}_A^{-1}(\vec{r}_A\cross(\vec{\hat{n}}-\mu\vec{\hat{t}}))\cross\vec{r}_A
   +\vec{I}_B^{-1}(\vec{r}_B\cross(\vec{\hat{n}}-\mu\vec{\hat{t}}))\cross\vec{r}_B)}
 \end{equation}
-% The impulse method can be used for both collision forces and contact forces
-% according to~\cite{Lembcke}. There described as using Guendelman's time stepping
-% algorithm. By, for example, detecting when the velocity is very small one can
-% calculate the contact impulse by setting $\epsilon = 0$.
-% Guendelman's time stepping algorithm is provided in pseudocode below, in accordance
-% to what is described in~\cite{guendelman}.
-%
-% \begin{algorithm}[H]
-%   \begin{algorithmic}[1]
-%   \State DetectCollisions
-%   \ForAll{collisions with v > 0}
-%     \State calculateImpulses
-%   \EndFor
-%   \State applyGravity
-%   \State updateVelocity
-%     \ForAll{collisions with |v| <= $\epsilon_v$}
-%       \State calculateImpulse (with elasticity = 0)
-%     \EndFor
-% \end{algorithmic}
-% \end{algorithm}
 
 \subsection{Inertia matrix}
 To be able to simulate the rotations of the objects properly we need the objects

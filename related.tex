@@ -1,0 +1,177 @@
+\chapter{Related Work}\label{cha:related}
+
+\section{Spherical Decomposition}\label{sec:decomp}
+\cite{gpugems} presents a method for collision detection and response using spherical
+decomposition. By subdividing the geometry into a collection of spheres one gets an
+approximation of the shape. Since each new geometry is locally convex, collision
+detection is much simplified, but the global result of the decomposition still have
+concave properties. Since each new geometry is the same primitive only
+one type of collision detection and response is needed, spheres in this case.
+For an example of geometries
+decomposed in this manner see figure~\ref{fig:bunnies}.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width = 0.9\textwidth]{flexBunnies.png}
+  \caption{Varying degrees of spherical decomposition of the Stanford bunny.}
+  \label{fig:bunnies}
+\end{figure}
+
+\subsection{Spring-damper model}
+Spring-damper model is the model for collision response described in~\cite{gpugems} and by~\cite{fossum}.
+The model has the benefit of being quite easy to implement on both CPU and GPU.
+However, since there are two design parameters, the spring coefficient and the damping
+constant, the system can be hard to tune. Often a parameter constellation that works
+fine for one system will fail for another.
+
+The equations below describe how the force and torque can be derived for this type
+of model. The equations describe the forces for collision between sphere i and j,
+where k is the spring constant, c the damping constant and d the
+diameter of the sphere. In equation~\ref{eq:tangent}, $\hat{r}$ refers to the
+position of the particle relative to the body's center.
+
+\begin{equation}
+  \vec{f}_{i,spring} = -k(d-|\vec{r}_{ij}|)\frac{\vec{r}_{ij}}{|\vec{r}_{ij}|}
+\end{equation}
+
+\begin{equation}
+  \vec{f}_{i,damping} = -c\vec{v}_{ij}
+\end{equation}
+
+\begin{equation}
+  \vec{v}_{ij} = \vec{v}_{particle} + \vec{v}_{tangential}
+\end{equation}
+
+\begin{equation}\label{eq:tangent}
+  \vec{v}_{tangential} = \vec{\omega} \cross ( \vec{r}- \vec{\omega}\bullet\frac{\vec{\omega}}{|\vec{\omega}^2|})
+\end{equation}
+
+Note that the equations above are mass independent which might be one of the
+reasons for it's common use with the particle method.
+
+This method has two unknown parameters, c and k, which must be tuned for the
+specific system for stability. Often this parameter is decided through testing
+and the tests need to be redone for new setups.
+
+\section{Multiple contacts in sequential solvers}
+When solving with multiple contacts between a body pair one can rewind time to
+find the first collision
+that occurred in the system (a single body pair, or globally), process it first
+then step forward until the next collision and so forth. However this method can
+be quite time consuming and lack parallelism since we get an ordering in the solver.
+If we do not back the system in time and
+instead simply solve all collisions we have currently and take some special care
+towards interpenetration we would end up with incorrect physics. The problem
+becomes quite apparent through the following example.
+In figure~\ref{fig:ballsExpected} we see the expected result and in
+figure~\ref{fig:noSplit} we see the result if one uses a naive implementation of
+parallel impulses.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width = 0.8\textwidth]{ballsExpected.png}
+  \caption{The expected result of the collision between the rigid body consisting
+  of the red balls and the rigid body consisting of the green balls.}
+  \label{fig:ballsExpected}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width = 0.8\textwidth]{ballsNoMassSplit.png}
+  \caption{Calculating all impulses in parallel can lead to too high end velocities.}
+  \label{fig:noSplit}
+\end{figure}
+
+This problem can be remedied by only solving one impulse between a body pair at a time.
+This can be achieved as above stated by either backing up time until there
+is only one collision, or a few collisions and then solve one of them, chosen
+arbitrarily. This gives rise to a order dependent system, and is something which
+makes for difficult realizations in parallel algorithms. Another approach popularized
+by Erin Catto in his Box2D is 'Sequential Impulses' which solves the worst interpenetration
+on each respective body pair, updates the velocities and iterates for a few iterations.
+One interesting aspect here is that negative impulses are allowed in intermediate
+results. However as the name suggests it is most suitable for a sequential implementation.
+Both of the methods above suggests that only one collision between a body pair should
+be solved at a time which leads to sequential processing. For more details see \cite{catto}.
+This method could arguably be parallelized in the sense that each body could be
+processed in parallel, however a different approach is used for this thesis.
+
+\section{Mass splitting}\label{sec:massSplit}
+\cite{tonge} describes, in their paper, a parallel constraint based solver
+using mass splitting. A similar approach where we split the mass prior to
+calculating the impulses by the number of collision between the two bodies. The
+calculated impulses are then applied to the original object.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width = 0.8\textwidth]{ballsMassSplit.png}
+  \caption{By mass splitting the objects by the number of interbody collisions
+  and applying the resulting impulses to the non-split object we get the expected result.}
+  \label{fig:massSplit}
+\end{figure}
+
+For this method to be implementable we need to count the number of collisions between
+every body pair. This is described in further detail on page~\pageref{sec:colMatrix}.
+
+With $\vec{j}$ defined as in equation~\ref{eq:finalJ} divide $\vec{j}$ by
+the number of collisions between the collision pair, here defined as $k$. The final modification to
+$\vec{j}$ before applying it to the bodies then becomes the following.
+
+\begin{equation}
+  \vec{j}_{mass split} = \frac{\vec{j}}{k}
+\end{equation}
+
+\section{Collision Detection}\label{sec:gridCD}
+\subsection{Spatial partitioning}
+~\cite{gpugems} suggests spatial partitioning
+by ways of a uniform grid for collision detection. This method is especially suitable
+for the spherical decomposition since for fixed sphere radius we can select an optimized
+grid size. In addition~\cite{gpugems},~\cite{green} and~\cite{fastnearest} claim that sorting
+the collisions by bin number increases memory coherence and overall performance.
+\subsection{Parallel Sweep-And-Prune}
+Parallel Sweep-And-Prune as investigated by~\cite{gpupipedev}, which in turn cites~\cite{liu2010}, %Find this source
+discuss a single axis Sweep-And-Prune algorithm on the GPU for broadphase collision
+detection using bounding boxes and the Separating-Axis-Theorem.
+
+\section{Time-stepping schemes}
+\cite{Lembcke} describes using Guendelman's time stepping
+algorithm. By, for example, detecting when the velocity is very small one can
+calculate the contact impulse by setting $\epsilon = 0$.
+Guendelman's time stepping algorithm is provided in pseudocode below, in accordance
+to what is described in~\cite{guendelman}.
+
+\begin{algorithm}[H]
+  \begin{algorithmic}[1]
+  \State DetectCollisions
+  \ForAll{collisions with v > 0}
+    \State calculateImpulses
+  \EndFor
+  \State applyGravity
+  \State updateVelocity
+    \ForAll{collisions with |v| <= $\epsilon_v$}
+      \State calculateImpulse (with elasticity = 0)
+    \EndFor
+\end{algorithmic}
+\end{algorithm}
+
+\section{Nonconvex collision with stacking}
+\cite{guendelman} present in their paper \textit{"Nonconvex Rigid Bodies with Stacking"}
+a scenario very similar to what this thesis aim to produce.
+While the end results are impressive in terms of simulating the scenario the performance
+is not particularly good. Dropping 500 rings consisting of 320 triangles averaged 3 minutes per frame.
+\subsection{Shock Propagation}
+In the same paper~\cite{guendelman} presents the Shock Propagation algorithm.
+By constructing a contact graph from the static objects in the scene, see figure~\ref{fig:cont},
+then solving the objects in contact with the static objects first, then change their
+mass making them static and solve the next layer and so forth. This lead to much
+higher stability in simulations, but does however introduce a sequential dependency
+since each level of the graph need to be processed before the next.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width = 0.8\textwidth]{shock.png}
+  \caption{Contact graph traversing from the static ground upwards.}
+  \label{fig:cont}
+\end{figure}
+
+\section{HACD}

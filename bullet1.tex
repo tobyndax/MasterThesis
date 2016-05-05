@@ -1,8 +1,9 @@
 \chapter{Bullet Rectangle Bounding Box}\label{cha:meth}
 For this thesis a comparative evaluation was decided upon, for that a baseline is
 required. I decided on a rectangle bounding box around the model
-as a simple method to compare against. It has obvious shortcomings in all
-areas, except maybe, performance.
+as a simple method to compare against. Except for performance it has shortcomings
+in all of the interesting areas. It can not handle concave collisions since a bounding
+box is convex and will therefore also produce incorrect results.
 
 \section{Implementation}\label{sec:recImpl}
 An axis-aligned bounding rectangle is fitted around the model.
@@ -24,7 +25,7 @@ without bounding boxes rendered and with bounding boxes rendered in figure~\ref{
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width = 0.8\textwidth]{Screenshots/startofSimulation1000bodies01-22(Bugged).png}
+  \includegraphics[width = 0.8\textwidth]{stack.png}
   \caption{The start state of the simulation. Models are stacked with some margin in between and translated by a offset in the xz plane randomly. }
   \label{fig:startStack}
 \end{figure}

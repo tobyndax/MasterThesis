@@ -102,14 +102,20 @@ The velocity step is by far the most time consuming step, using around half of t
 the impulse step at a second place with about a third of the time. Once again due
 to them having to be reiterated 10 times.
 
-\subsection{Modified Normals}
-Even small deviations from the sphere's normals towards the original normals quickly
-led to tunneling when bodies stacked. Single bodies on a plane and similar situations
-did perform reasonable. Small local changes seem to lead to the system overall not
-separating the spheres properly and the idea of modified
-normals seem unlikely to succeed.
+\section{Modified Normals}
+While difficult to say wether the end result is more or less physically correct
+what can be tested is the amount of stabilization iterations for which the simulation
+is still stable (i.e. avoids tunneling). The testing was performed on 5 by 5 by 5
+cubes so a decent amount of particles would have modified normals. Without modified
+normals at 6 iterations there was severe tunneling between the objects. With replaced normals
+ as low as 4 iterations gave no tunneling. In addition when going lower
+ and tunneling do occur, with modified normals we have a greater chance of the
+ situation resolving itself since the edge particles will always push to separate
+ the objects, much as the signed distance field described by~\cite{flex}.
+ With weighted normals, as described in section~\ref{sec:modnorm}, some improvement
+ could be seen and as few as 6 iterations could be used without tunneling.
 
-\subsection{Tighter voxelization}
+\section{Tighter voxelization}
 Tighter voxelization led to better collision result since the surface is modeled
 more accurately, in addition one could decrease the number of iterations needed
 for tunnel prevention and stability. This is most likely due to the reduce depth
@@ -121,7 +127,8 @@ This method will take a penalty to the collision detection shader step in
 terms of performance since many of the bodies own particles will register as collisions
 for the tighter voxelization. During testing the benefit of lowering the number of
 stabilization iterations greatly outweighed the extra time needed in the collision
-detection.
+detection. Again testing on the 5 by 5 by 5 cubes without tightened voxelization 6 iterations resulted in
+tunneling, with tightened voxelization as low as 3 iterations still managed without tunneling.
 
 \section{Limitations}
 \subsection{Per body particle limit}
@@ -152,13 +159,13 @@ is remedied somewhat by friction, albeit not completely.
 
 \section{Comparison to bullet}
 \subsection{Concavity}
-The method can handle concave results but the current implementations poor scaling
-with increased number of particles per body result in a loss against bullets HACD.
-It is difficult to not talk about performance in this section as we can get good
-concavity results but at the cost of increased voxelization, which in turn affects the
-performance.
-The performance of HACD with Bullet 2.83 will outperform the spherical decomposition
-at equivalent detail.
+The method can handle concavity through spherical decomposition. The detail of of
+the resulting collision shape is highly dependent on voxelization resolution.
+Since the collision detection is designed to operate on spheres of equal size
+objects such as the Utah teapot with both large and small features can quickly get
+a high number of spheres. HACD can model these with a single larger hull for the body
+and smaller hulls for the smaller features.
+
 \subsection{Performance}
 In figure~\ref{fig:frameTimeBoxes05}~and~\ref{fig:frameTimeBoxes025}
 on pages~\pageref{fig:frameTimeBoxes05}~and~\pageref{fig:frameTimeBoxes025}

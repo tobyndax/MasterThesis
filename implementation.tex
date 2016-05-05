@@ -1,99 +1,34 @@
 \chapter{Parallel Impulse Solver}\label{cha:impl}
+The parallel impulse solver will be implemented using spherical decomposition as
+ described in section~\ref{sec:decomp}, using the grid based and sorted output
+ collision detection described in section~\ref{sec:gridCD}. Implementation details
+ concerning the collision detection can be found in section~\ref{sec:implcd}.
+In this chapter I suggest solving rigid body dynamics on the GPU using spherical decomposition
+however instead of using a spring-dampner model as in~\cite{gpugems} or constraint
+based physics as~\cite{flex} suggests, I investigate the use of impulses instead.
 
-\section{Spherical Decomposition}
-\cite{gpugems} presents a method for collision detection and response using spherical
-decomposition. By subdividing the geometry into a collection of spheres one get an
-approximation of the shape. Since each new geometry is locally convex collision
-detection is much simplified, but the global result of the decomposition still have
-concave properties. Since each new geometry is the same primitive only
-one type of collision detection and response is needed. For an example of geometries
-decomposed in this manner see figure~\ref{fig:bunnies}.
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width = 0.9\textwidth]{flexBunnies.png}
-  \caption{Varying degrees of spherical decomposition of the Stanford bunny.}
-  \label{fig:bunnies}
-\end{figure}
-
-\subsection{Modified Normals}
+\section{Modified Normals}\label{sec:modnorm}
 Since the particles can be seen as a type of collision proxy shape for the true object,
 it is reasonable to investigate what would happen if instead of the sphere's normals,
 the original object's normals were used for collision resolution. Or if a weighted
-average of the sphere's and the object's normals were used.
-\subsection{Tighter voxelization}
+average of the sphere's and the object's normals were used. For the cube only
+sphere's that lies on the faces of the cube have their normals modified, the corners
+and edges are left with their original normals.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width = 0.9\textwidth]{modifiedNormals04-27.png}
+  \caption{Red spheres have their normals modified and the normals are rendered as lines.}
+  \label{fig:modnorm}
+\end{figure}
+
+\section{Tighter voxelization}
 By tightening the voxelization, while still using the same radius on the particles,
 i.e. let the particles overlap within the body, we effectively change the surface
 normals, overall this will lead to a smoother surface at the cost of increasing the number
-of particles needed.
-
-\section{Multiple contacts in sequential solvers}
-When solving with multiple contacts between a body pair one can rewind time to
-find the first collision
-that occurred in the system (a single body pair, or globally), process it first
-then step forward until the next collision and so forth. However this method can
-be quite time consuming and lack parallelism since we get an ordering in the solver.
-If we do not back the system in time and
-instead simply solve all collisions we have currently and take some special care
-towards interpenetration we would end up with incorrect physics. The problem
-becomes quite apparent through the following example.
-In figure~\ref{fig:ballsExpected} we see the expected result and in
-figure~\ref{fig:noSplit} we see the result if one uses a naive implementation of
-parallel impulses.
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width = 0.8\textwidth]{ballsExpected.png}
-  \caption{The expected result of the collision between the rigid body consisting
-  of the red balls and the rigid body consisting of the green balls.}
-  \label{fig:ballsExpected}
-\end{figure}
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width = 0.8\textwidth]{ballsNoMassSplit.png}
-  \caption{Calculating all impulses in parallel can lead to too high end velocities.}
-  \label{fig:noSplit}
-\end{figure}
-
-This problem can be remedied by only solving one impulse between a body pair at a time.
-This can be achieved as above stated by either backing up time until there
-is only one collision, or a few collisions and then solve one of them, chosen
-arbitrarily. This gives rise to a order dependent system, and is something which
-makes for difficult realizations in parallel algorithms. Another approach popularized
-by Erin Catto in his Box2D is 'Sequential Impulses' which solves the worst interpenetration
-on each respective body pair, updates the velocities and iterates for a few iterations.
-One interesting aspect here is that negative impulses are allowed in intermediate
-results. However as the name suggests it is most suitable for a sequential implementation.
-Both of the methods above suggests that only one collision between a body pair should
-be solved at a time which leads to sequential processing. For more details see \cite{catto}.
-This method could arguably be parallelized in the sense that each body could be
-processed in parallel, however a different approach is used for this thesis.
-
-\section{Mass splitting}\label{sec:massSplit}
-\cite{tonge} describes, in their paper, a parallel constraint based solver
-using mass splitting. A similar approach where we split the mass prior to
-calculating the impulses by the number of collision between the two bodies. The
-calculated impulses are then applied to the original object.
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width = 0.8\textwidth]{ballsMassSplit.png}
-  \caption{By mass splitting the objects by the number of interbody collisions
-  and applying the resulting impulses to the non-split object we get the expected result.}
-  \label{fig:massSplit}
-\end{figure}
-
-For this method to be implementable we need to count the number of collisions between
-every body pair. This is described in further detail on page~\pageref{sec:colMatrix}.
-
-With $\vec{j}$ defined as in equation~\ref{eq:finalJ} one would simply divide $\vec{j}$ by
-the number of collisions between the collision pair, here defined as $k$. The final modification to
-$\vec{j}$, before applying it to the bodies then becomes the following.
-
-\begin{equation}
-  \vec{j}_{mass split} = \frac{\vec{j}}{k}
-\end{equation}
+of particles needed. Tighter voxelization is related to modified normals as the new
+representation now more accurately models the surface and it's normals. In figure~\ref{fig:modnorm}
+the spheres have been tightened and overlap.
 
 \section{Collision matrix}\label{sec:colMatrix}
 As previously mentioned in section~\ref{sec:massSplit} we need to count the collisions
@@ -113,14 +48,10 @@ the collision detection shader, each detected collision increments $C_{i,j}$
  other words, the benefit that an algorithm comes with have to outweigh the potentially
  slow atomic operations.
 
-\section{Collision Detection}
+\section{Collision Detection} \label{sec:implcd}
 Initially a brute force collision detection was tested. With $O(n^2)$ it was too
-slow and had poor scaling as expected. ~\cite{gpugems} suggests spatial partitioning
-by ways of a uniform grid for collision detection. This method is especially suitable
-for the spherical decomposition since for fixed sphere radius we can select an optimized
-grid size. In addition both~\cite{gpugems} and~\cite{fastnearest} claim that sorting
-the collisions by bin number increases memory coherence and overall performance.
-
+slow and had poor scaling as expected. Instead the spatial partitioning with sorting
+was implemented.
 Each cell in the grid is $d x d x d$ where $d$ is the diameter of the largest sphere
 present in the system. The grid represents 3D space and for simplicity the grid is
 implemented as being $mxmxm$.
@@ -144,10 +75,13 @@ the process.
 \end{algorithm}
 
 The hash function used for this thesis is a simple flooring of the x,y,z coordinates, a
-division by the cell size ($d$) and an offset to let us center the grid over our wished domain.
+division by the cell size ($d$) and an offset to let us center the grid over our specified domain.
+Domain here refers to the coordinates which the grid covers. From $-offset$ to $xd-offset$ along the
+x axis for example, where $d$ is the cellsize and $x$ is the number of bins along the x axis.
 \begin{equation}
   \vec{id} = floor((\vec{p}-\vec{offset})/d)
 \end{equation}
+
 Accessing the correct bin, given m bins per dimension and $\vec{id} = [idx,idy,idz]$, becomes:
 \begin{equation}
   binIndex = idx + idy*m + idz*m^2
@@ -180,7 +114,7 @@ The overall flow of the collision detection can be summarized as below.
   \end{algorithmic}
 \end{algorithm}
 
-\subsection{Particles outside the grid}
+\subsection{Particles outside the collision grid}
 Particles can collide even when outside the grid due to the indexing
 being clamped to the grid, see figure~\ref{fig:gridStretch}.
 
@@ -240,7 +174,6 @@ sphere, whereas the blue dispatch across bodies instead.
   \label{fig:flow}
 \end{figure}
 
-
 \subsection{Collision Detection}
 The collision detection is preformed as mentioned through sorting and spatial partitioning.
 The main problems with this approach is the limited domain which can be simulated.
@@ -266,10 +199,10 @@ The collisions are transferred between shader by storing them in a contact manif
 the contact manifold contain space for the particle id of the other colliding particle,
 the impulse to be calculated and the normal along which we should apply the impulse.
 In the current implementation the maximum amount of collisions transferred for a
-particle is four. While this leaves room for error as with interpenetrating particles,
+particle is four. While this leaves room for error as with interpenetrating particles
 more than four collision per particle can happen. Testing has shown that this happen
-quite rarely and give quite a small impact on outcome, it does however give a big
-performance increase.
+quite rarely and give quite a small impact on the outcome, it does however give a big
+performance increase when transferring fewer contacts.
 
 In the collision detection the number of collisions between body pairs is also determined.
 
@@ -336,3 +269,26 @@ step for readability.
 
 \subsection{Position Update}
 This shader updates the bodies' states through integration as described in the theory chapter.
+
+\section{Optimizations}
+\subsection{Impulses}
+In the impulse shader we need to fetch all the other particles which have a collision
+with the current particle. Prefetching these to a local variable before doing any
+calculations doubled performance.
+
+\begin{algorithm}[H]
+  \begin{algorithmic}[1]
+  \State
+  \ForAll{particles in collision with current particle}
+    Add particle to local container
+  \EndFor
+  \State Synchronize, ensure all threads have performed their reads
+  \State Calculate impulses
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Velocity update}
+When calculating the forces' contributions to the velocities once again local variables
+are used and synchronizations. This time the aim is two fold, one fast writes during
+calculations to the local variables and coherent writes to buffer memory once all
+calculations are done.
