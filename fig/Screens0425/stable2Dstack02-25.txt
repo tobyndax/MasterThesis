@@ -1,0 +1,17 @@
+Parameters
+float dt = 0.01f;
+float radius = 1.0f;
+float bSphere = 0.3f;
+float b = 1.0f;
+float delta_s = 0.25f;
+float EPSILON_P = 0.0f;
+float widthR = 10.0f;
+float widthL = 10.0f;
+float widthF = 10.0f;
+float widthB = 10.0f;
+uint numParticles = 1000;
+bool penSolve = true;
+float vCont = 10.0f;
+
+Notes: 
+The collisions with vCont = 10.0f is probably elas = 0 all the time. 
