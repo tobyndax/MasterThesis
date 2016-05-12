@@ -3,12 +3,12 @@
 According to~\cite{baberrigid} there are three major methods for solving rigid body
 dynamics; penalty methods, impulse methods and constraint based methods.
 In common with the methods for rigid body dynamics is the need for the governing laws of
-motion which move the simulation forward in time, some form of collision detection
-and a collision response. The collision detection, due to its planned use for GPU collision
+motion which move the simulation forward in time. In addition some form of collision detection
+and collision response is needed. The collision detection, due to its planned use for GPU collision
 detection, will be limited to a uniform grid/sort-based method, as described by~\cite{gpugems}.
 The method of using mass splitting and spherical decomposition are very similar
 to what~\cite{flex} and~\cite{bulletPipeline} have presented with regards to
-constraint based physics, in this thesis I describe a method for using it with
+constraint based physics. In this thesis I describe a method for using it with
 impulse based physics while keeping the calculations on the GPU. When describing the laws of motion and equations
 for updating the state variables the following diagram can be referenced.
 
@@ -121,7 +121,7 @@ In the equations the tangent can be calculated as described below.
 \end{equation}
 
 \subsection{Replacing force with impulses}
-Granted that we have the impulse created between body A and body B the following
+Assuming that we have the impulse created between body A and body B the following
 equation can be used to update the states, the impulse is applied along the collision normal.
 The equations regarding velocity updates are given below. In the equations below, $\vec{r}$,
 is referring to the vector to the body's mass center. Please refer to figure~\ref{fig:diag}.
@@ -195,7 +195,8 @@ system could potentially destabilize the system, therefore only a fraction of th
 interpenetration is solved each iteration, and the impulse-velocity steps are iterated
 several times instead to ensure smooth and careful solving of the interpenetration.
 In addition a slop variable $\delta_{slop}$ is introduced so that some overlap of geometries
-is allowed before correction starts. This relaxes the system on a whole somewhat.
+is allowed before correction starts. This relaxes the system since some interpenetration is
+allowed and penalty forces are used to resolve the interpenetration.
 Please refer to figure~\ref{fig:slop}.
 
 \begin{figure}[H]

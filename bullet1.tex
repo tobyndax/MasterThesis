@@ -46,7 +46,8 @@ without bounding boxes rendered and with bounding boxes rendered in figure~\ref{
 
 \section{Testing}\label{sec:testing}
 Different parameters were tested to see how they affect the system in terms of performance.
-The different parameters get their own explanation below, the full test data can be found in appendix~\ref{app:bullet}.
+The different parameters are explained in section~\ref{subsec:relax} through~\ref{subsec:enden},
+ the full test data can be found in appendix~\ref{app:bullet}.
 The figures present total simulation time with respect to energy threshold and sub-iterations used and
 frame times for the same parameters. In addition differently sized objects were tested
 as the number of layers in the stacking greatly affect the simulation time.
@@ -82,7 +83,7 @@ used. Note that at a energy threshold of 0.1 J I have never been able
 to find a visual discrepancy in the distribution of the parts. Bullet inserts an
 artificial additional gap between object of 0.04 units (for collision detection purposes).
 So ending the simulation somewhat early is quite safe. Setting this energy threshold
-too high will give obvious issues.
+too high will result in issues such as objects balancing impossibly.
 
 \subsection{Sub iterations}
 The Sequential Impulse solver uses sub-iterations to resolve interpenetrations within
@@ -157,7 +158,7 @@ but the feature can, if wanted, be left activated for those scenarios as well.
 
 The amount of sub-iterations do not seem to have a huge impact on neither simulation
 quality nor simulation time.
-During testing it has however been noted that selecting a very low amount of
+During testing it has however been noticed that selecting a very low amount of
 sub-iterations, for example one iteration, could in some cases lead to oscillating,
  non-stabilizing systems. These observations let me decide on a fixed amount of sub-iterations, for
 this thesis I selected 10, at the higher end of what Erwin Coumans suggests.
@@ -172,7 +173,7 @@ One could use a minimum bounding rectangle instead of a
 axis-aligned one, this is however left out of this thesis as this method is not
 the prime focus of the work. For reference on such methods see~\cite{minBounding}.
 In addition one can quite easily by manual work rotate the model to be in a state
- which gives that the axis-aligned bounding
+ in which the axis-aligned bounding
 rectangle coincides with the optimal bounding rectangle, or at least very close
 to it. For many models, such as the Utah Teapot, they are already in the optimal
 orientation.

@@ -12,8 +12,8 @@ decomposed in this manner see figure~\ref{fig:bunnies}.
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width = 0.9\textwidth]{flexBunnies.png}
-  \caption{Varying degrees of spherical decomposition of the Stanford bunny.}
+  \includegraphics[width = 0.9\textwidth]{voxelExample.png}
+  \caption{Varying degrees of spherical decomposition of the Utah Teapot}
   \label{fig:bunnies}
 \end{figure}
 
@@ -50,7 +50,7 @@ Note that the equations above are mass independent which might be one of the
 reasons for it's common use with the particle method.
 
 This method has two unknown parameters, c and k, which must be tuned for the
-specific system for stability. Often this parameter is decided through testing
+specific system for stability. Often these parameters are decided through testing
 and the tests need to be redone for new setups.
 
 \section{Multiple contacts in sequential solvers}
@@ -61,8 +61,8 @@ then step forward until the next collision and so forth. However this method can
 be quite time consuming and lack parallelism since we get an ordering in the solver.
 If we do not back the system in time and
 instead simply solve all collisions we have currently and take some special care
-towards interpenetration we would end up with incorrect physics. The problem
-becomes quite apparent through the following example.
+towards interpenetration we would end up with an incorrect simulation. The problem
+becomes apparent through the following example.
 In figure~\ref{fig:ballsExpected} we see the expected result and in
 figure~\ref{fig:noSplit} we see the result if one uses a naive implementation of
 parallel impulses.
@@ -111,7 +111,7 @@ calculated impulses are then applied to the original object.
 \end{figure}
 
 For this method to be implementable we need to count the number of collisions between
-every body pair. This is described in further detail on page~\pageref{sec:colMatrix}.
+every body pair. This is described in further detail in section~\ref{sec:colMatrix}.
 
 With $\vec{j}$ defined as in equation~\ref{eq:finalJ} divide $\vec{j}$ by
 the number of collisions between the collision pair, here defined as $k$. The final modification to
@@ -131,7 +131,8 @@ the collisions by bin number increases memory coherence and overall performance.
 \subsection{Parallel Sweep-And-Prune}
 Parallel Sweep-And-Prune as investigated by~\cite{gpupipedev}, which in turn cites~\cite{liu2010}, %Find this source
 discuss a single axis Sweep-And-Prune algorithm on the GPU for broadphase collision
-detection using bounding boxes and the Separating-Axis-Theorem.
+detection using bounding boxes and the Separating-Axis-Theorem. For more details
+concerning the basics of Sweep-And-Prune, turn to the work of~\cite{SAPPierre}.
 
 \section{Time-stepping schemes}
 \cite{Lembcke} describes using Guendelman's time stepping
@@ -174,4 +175,29 @@ since each level of the graph need to be processed before the next.
   \label{fig:cont}
 \end{figure}
 
-\section{HACD}
+\section{Hierarchical Approximate Convex Decomposition}
+A popular method for collision detection concerning complex concave objects
+are convex decomposition. Reasons for the methods' popularity may be it's relative
+simplicity in theory. Dividing the concave model down into subsets, which are
+all convex can give composite shapes that are concave yet still work with the
+traditional collision detection and response models since they work on convex
+sub-shapes, see figure~\ref{fig:hacdSimple}, where an initially concave shape has
+been subdivided in smaller convex shapes. Creating composite shapes in a physics
+engine is fairly straightforward as each submodel contributes to the inertia and
+mass of the object. Each objects previous collision shape can be used or a new collision
+shape for the whole object can be recalculated. Each submodel's forces from collisions
+contribute to the whole objects' movement instead of it's own.
+There are some automatic methods for convex decompositions, among them HACD developed by~\cite{mamou}.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width = 0.8\textwidth]{hacdSimple.png}
+  \caption{The basic idea behind HACD, subdividing a concave shape into smaller convex ones.}
+  \label{fig:hacdSimple}
+\end{figure}
+
+\cite{HACD} investigated the use of HACD and found it to produce fewer hulls
+than previous methods while still approximating the original objects well.
+Mamou is currently working on a newer version of HACD called
+V-HACD, which among other things include GPU acceleration, this library will not be
+tested as it has not been integrated into Bullet 2.83 as of yet.

@@ -3,16 +3,19 @@ In the following chapter the result of physics through spherical decomposition w
 be discussed and performance testing will be presented.
 
 \section{Performance}
-Since different shaders is impacted differently by different problems a few performance
+Since different shaders are impacted differently by different problems a few performance
 test-series has been performed and will be discussed below.
-For all tests, cubes have been used as the object being approximated and they
-are being dropped into a bin consisting of static particles. For complete data collected and
+For all tests the objects being approximated
+are dropped into a bin consisting of static particles. For the complete data collected and
 settings used see appendix~\ref{app:test}.
 
-The times presented for velocity and impulse (who are both iterated ten times per update)
- are the total time for all ten iterations.
+The times presented for velocity and impulse
+are the total time for all ten iterations. For the method, the shapes of the objects
+ do not affect the simulation significantly and simple boxes have been used in all tests, with one exception.
+ In the last test series a Utah Teapot has been voxelized for a more comparable
+ test against Bullet 2.83 with a decomposed Utah Teapot.
 
-\subsection{Number of particles per body}
+\subsection{Increasing number of particles per body}
 Increasingly fine decomposition lead to more particles per body.
 For this test the number of particles per body increase for each series and is
 compensated by adding fewer bodies so that the number of particles in the system
@@ -31,7 +34,7 @@ against the number of particles in the body per thread.
 
 \subsection{Increasing number of static particles}
 For this test we let the number of static particles in the simulation increase
-by increasing the dimensions of the bin (box).
+by increasing the dimensions of the bin.
 
 \begin{figure}[H]
   \centering
@@ -44,19 +47,19 @@ and a small increase in the grid generation.
 The increase in impulse is not surprising as each particle, even static ones, perform
 global reads and writes per particle in the impulse shader step. One could potentially
 use a early exit strategy and not perform the impulse calculations for static particles,
-however, unless the whole workgroup is static particles one is not guaranteed that
-it will net any performance gain as returning threads within a workgroup do not ensure
+however, unless the whole workgroup is static particles one is not guaranteed
+any performance gain as returning threads within a workgroup do not ensure
 that new work can be performed.
 
 \subsection{Increasing number of bodies and dynamic particles}
-For this test we increase the number of bodies (and particles) in the system.
+For this test we increase both the number of bodies and particles in the system.
 \begin{figure}[H]
   \centering
   \includegraphics[width = 0.8\textwidth]{bodiesIncrease.png}
   \caption{Chart of performance of each of the shader steps for increasing number of bodies and particles.}
 \end{figure}
 
-Here we can see (while difficult to see for move to world and position) an increase in every shader step.
+Here we can see an increase in every shader step.
 Worst scaling can be seen among the impulse and velocity step. Those shader steps are the two involved
 in the stabilization loop and both are executed ten times each per update and optimizations
 to these two steps should be prioritized in the future.
@@ -79,8 +82,9 @@ we still read an equal amount of particles no matter the grid size and the parti
 sorted from the grid generation shader.
 
 \subsection{Increasing cell size}
-For this test we increase the domain of the simulation by increasing the cell size instead.
-This leads to more particles having to be checked as more and more will end up in
+For this test we increase the size of the simulation domain by increasing the cell size instead.
+This leads to more candidate particles, needing to be validated as collisions or not,
+as more and more will end up in
 the larger and larger surrounding cells.
 \begin{figure}[H]
   \centering
@@ -94,15 +98,7 @@ in this test we get two times the size of the simulation domain in each dimensio
 Also note that the time increase from cell size 2 to cell size 8 is only 0.34 ms in total for all shader steps.
 This is cheaper than increasing the grid size from 32 to 128, which gives an increase of 0.93 ms.
 
-\subsection{Large scale system}
-With a system consisting of 1024 dynamic bodies with 218 particles per body
- and a total of 254348 particles (including
-static ones), we get about 103 ms per frame, which is comparable to Bullet's HACD.
-The velocity step is by far the most time consuming step, using around half of the total time with
-the impulse step at a second place with about a third of the time. Once again due
-to them having to be reiterated 10 times.
-
-\section{Modified Normals}
+\subsection{Modified Normals}
 While difficult to say wether the end result is more or less physically correct
 what can be tested is the amount of stabilization iterations for which the simulation
 is still stable (i.e. avoids tunneling). The testing was performed on 5 by 5 by 5
@@ -115,7 +111,7 @@ normals at 6 iterations there was severe tunneling between the objects. With rep
  With weighted normals, as described in section~\ref{sec:modnorm}, some improvement
  could be seen and as few as 6 iterations could be used without tunneling.
 
-\section{Tighter voxelization}
+\subsection{Tighter voxelization}
 Tighter voxelization led to better collision result since the surface is modeled
 more accurately, in addition one could decrease the number of iterations needed
 for tunnel prevention and stability. This is most likely due to the reduce depth
@@ -130,6 +126,45 @@ stabilization iterations greatly outweighed the extra time needed in the collisi
 detection. Again testing on the 5 by 5 by 5 cubes without tightened voxelization 6 iterations resulted in
 tunneling, with tightened voxelization as low as 3 iterations still managed without tunneling.
 
+\subsection{Voxelized Teapot}\label{sec:teapot}
+For this final test a Utah Teapot has been voxelized into 171 spheres, see figure~\ref{fig:voxteapot}.
+The testing constist of two test series. One with 256 bodies and one with 512 bodies.
+Each setup tested with 10 and 5 stabilization iterations. These results can be compared to the
+results from Bullet in chapter~\ref{sec:hacd} and are therefore included in the graphs.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width = 0.8\textwidth]{voxteapot.png}
+  \caption{Teapot voxelized with 171 spheres}
+  \label{fig:voxteapot}
+\end{figure}
+
+
+At 512 bodies and 5 iterations spherical voxelization see a speedup of a factor of 2 compared to
+Bullet with no sleeping. At 10 iterations a speedup of a factor of 1.3.
+When Bullets' sleeping is activated it's slower than spherical voxelization at 5 stabilization iterations but faster than
+spherical voxelization at 10 stabilization iterations. See figure~\ref{fig:GvC512}.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width = 0.8\textwidth]{graphs/GvC512.png}
+  \caption{Chart of performance comparison between spherical voxelization and Bullet for 512 bodies}
+  \label{fig:GvC512}
+\end{figure}
+
+At 256 bodies the speedup is not as large. Comparing 5 stabilization iterations on the
+GPU solution to Bullet without sleeping gives a speedup with a factor of 1.6.
+At 10 stabilization iterations spherical voxelization is somewhat slower than Bullet.
+With sleeping enabled Bullet is faster than the GPU solution at 5 stabilization iterations, even if
+only by a small margin. See figure~\ref{fig:GvC256}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width = 0.8\textwidth]{graphs/GvC256.png}
+  \caption{Chart of performance comparison between spherical voxelization and Bullet for 256 bodies}
+  \label{fig:GvC256}
+\end{figure}
+
 \section{Limitations}
 \subsection{Per body particle limit}
 Currently in the velocity update shader there is a for-loop across all the spheres
@@ -137,7 +172,7 @@ belonging to the current body, this is done to gather all the forces from the sp
 To ensure performance on the GPU one uses unrolling, i.e. the for-loops content is
 duplicated for as many iterations as necessary. However on the GPU this mean two
 things, we have trouble with dynamic length on the for-loops and there is a upper
-bound on how many iterations that are allowed. For the hardware used for the thesis,
+bound on the number of iterations that are allowed. For the hardware used for the thesis,
 this limit is 4096. Therefor the method is currently limited to a maximum of 4096
 spheres per body.
 
@@ -167,27 +202,19 @@ a high number of spheres. HACD can model these with a single larger hull for the
 and smaller hulls for the smaller features.
 
 \subsection{Performance}
-In figure~\ref{fig:frameTimeBoxes05}~and~\ref{fig:frameTimeBoxes025}
-on pages~\pageref{fig:frameTimeBoxes05}~and~\pageref{fig:frameTimeBoxes025}
-we can read out that Bullet can simulate 1000 boxes at around 10 ms per frame.
-Spherical decomposition can simulate a box decomposed with 27 spheres at around 15 ms.
-The performance is comparable at this level of detail.
+In section~\ref{sec:teapot} we see that when simulating many rigid bodies spherical
+voxelization shows an improvement in performance over Bullet. However increasing
+the detail in the decomposition will quickly reduce the performance.
 
 Since the velocity and impulse shader steps are iterated
 several times for stabilization these steps are quite vital to the performance
 of the method. More work could be spent on improving the performance of these shaders,
 but one should also investigate if the stabilization iterations could be exchanged for
-shock propagation. A sign that this might be the case is the results achieved by~\cite{flex} with nVidia Flex.
-
-For a comparison with HACD, with bullet coming in at 100 ms it now becomes
-a question of how many spheres are needed to represent our chosen object.
-As presented we can simulate 1024 bodies of 218 particles at 100 ms, which is comparable to
- the implementation Bullet's HACD for 1000 bodies in terms of time. The question is
- if the results are good enough at 218 spheres which is dependent on object detail
- and required detail preservation.
+shock propagation. As already shown by the results achieved by~\cite{flex} with nVidia Flex.
 
 \subsection{Correctness}
 Correctness for spherical decomposition depend highly on how finely the model is
-decomposed, much like how Bullet's HACD depends on how many vertices is allowed
-per model. Boxes with as low as 27 particles looks convincing, but e.g. a Utah Teapot
-may need many more particles to produce convincing results.
+decomposed, much like how Bullet's HACD depends on how many vertices are allowed
+per model and how many models are used. Boxes with as low as 27 particles looks convincing, but e.g. a Utah Teapot
+may need many more particles to produce convincing results, at 171 particles the
+Utah teapot looks decently decomposed.

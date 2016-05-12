@@ -10,8 +10,8 @@ In this thesis as a baseline comparison a well established open source physics e
 As suspected the Bullet with HACD produces good result with decent performance and
 the method includes very few design parameters. The approach with using HACD gives
 a robust and easily managed solution, with the only drawback being that the HACD
-may produce unexpected results for certain meshes. However, when this does happen
-one always have the alternative to design the sub shapes by hand in external applications.
+may produce unexpected results for certain meshes. However, when this happen
+one always has the alternative to design the sub shapes by hand in external applications.
 
 \subsection{Spherical decomposition}
 In this thesis I have shown that a physics simulation based on impulses with
@@ -25,8 +25,12 @@ The solution shows good promise, in addition to the results presented within thi
 thesis report is the release of Flex by~\cite{flex} at nVidia
 during the course of the thesis, which uses some of the same core concepts.
 
-Compared to HACD, voxelization is more intuitive and results are easier to modify
-when needed. GPU code is in general more difficult to maintain than a CPU implementation.
+Compared to HACD, voxelization is more intuitive and the results are easier to modify
+when needed, however, HACD has support in design tools such as Blender, which make
+for easy modifications through it's design tools.
+%For long term maintainability GPU code is in general more difficult
+%to maintain than a CPU implementation, and one should consider carefully before using
+%GPU-based implementations in production.
 
 \section{Future work}
 In addition to pure optimization work which can almost always be done for almost any piece
