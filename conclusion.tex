@@ -1,4 +1,6 @@
 \chapter{Conclusion and future work}
+With both a CPU and GPU method implemented this chapter will discuss the benefits
+and disadvantages of the two methods.
 \section{Conclusion}
 \subsection{HACD}
 In this thesis as a baseline comparison a well established open source physics engine
@@ -21,6 +23,10 @@ spent on the problem. In terms of performance the proposed solution can match of
 solutions (in the form of Bullet 2.83), when an object is decomposed into fewer than
 218 particles.
 
+The solution scales better than Bullet with respect to number of objects in the scene,
+however quite a large number of bodies need to be in the scene for the GPU solution
+to be faster than Bullet.
+
 The solution shows good promise, in addition to the results presented within this
 thesis report is the release of Flex by~\cite{flex} at nVidia
 during the course of the thesis, which uses some of the same core concepts.
@@ -33,8 +39,7 @@ for easy modifications through it's design tools.
 %GPU-based implementations in production.
 
 \section{Future work}
-In addition to pure optimization work which can almost always be done for almost any piece
-of software the following are suggestions for future work and improvements.
+The following are suggestions for future work and improvements.
 
 The number of iterations needed for stability increases with increased stack sizes.
 The reasons for this is motivated in section~\ref{sec:stabil}.

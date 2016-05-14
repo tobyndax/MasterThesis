@@ -131,12 +131,28 @@ For this final test a Utah Teapot has been voxelized into 171 spheres, see figur
 The testing constist of two test series. One with 256 bodies and one with 512 bodies.
 Each setup tested with 10 and 5 stabilization iterations. These results can be compared to the
 results from Bullet in chapter~\ref{sec:hacd} and are therefore included in the graphs.
+In figure~\ref{fig:voxFinish} is a finished simulation with the voxelized teapots rendered
+with the model instead of spheres and
+in figure~\ref{fig:voxCloseup} is a close up of the simulation.
 
 \begin{figure}[H]
   \centering
   \includegraphics[width = 0.8\textwidth]{voxteapot.png}
   \caption{Teapot voxelized with 171 spheres}
   \label{fig:voxteapot}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width = 0.8\textwidth]{finishedSphoxTeapot.png}
+  \caption{Finished simulation using spherical decomposition}
+  \label{fig:voxFinish}
+\end{figure}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width = 0.8\textwidth]{closeUpSphox.png}
+  \caption{Closeup of finished simulation using spherical decomposition}
+  \label{fig:voxCloseup}
 \end{figure}
 
 
@@ -163,6 +179,17 @@ only by a small margin. See figure~\ref{fig:GvC256}
   \includegraphics[width = 0.8\textwidth]{graphs/GvC256.png}
   \caption{Chart of performance comparison between spherical voxelization and Bullet for 256 bodies}
   \label{fig:GvC256}
+\end{figure}
+
+At 1024 bodies spherical decomposition is faster even when comparing 10 stabilization iterations
+to Bullet with sleeping enabled. A good indication that the spherical decomposition system
+scales better than Bullet with many bodies. See figure~\ref{fig:GvC1024}.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width = 0.8\textwidth]{graphs/GvC1024.png}
+  \caption{Chart of performance comparison between spherical voxelization and Bullet for 1024 bodies}
+  \label{fig:GvC1024}
 \end{figure}
 
 \section{Limitations}

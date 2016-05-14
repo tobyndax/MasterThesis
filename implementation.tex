@@ -48,9 +48,7 @@ the collision detection shader, each detected collision increments $C_{i,j}$
  other words, the benefit that an algorithm comes with have to outweigh the potentially
  slow atomic operations.
 
-\section{Collision Detection} \label{sec:implcd}
-\reversemarginpar
-\marginpar{I am uncertain if this section should move to related work instead.}
+\section{Collision Detection}\footnote{\textcolor{blue!80}{I am uncertain if this section should move to related work instead.}}\label{sec:implcd}
 Initially a brute force collision detection was tested. With $O(n^2)$ it was too
 slow and had poor scaling as expected. Instead the spatial partitioning with sorting
 was implemented.

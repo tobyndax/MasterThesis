@@ -1,4 +1,7 @@
 \chapter{Hierarchical Approximate Convex Decomposition}\label{sec:hacd}
+Hierarchical approximate convex decomposition (HACD) can be used to decompose
+concave objects into a collection of convex objects. These objects can be used
+to simulate the scene instead.
 \section{Implementation}
 Bullet 2.83 contain a
 composite (or compound) shape, a shape container which contain sub-shapes and act
@@ -51,17 +54,20 @@ in table~\ref{tab:hacdtest}.
 \begin{table}[htbp]
 \caption{Testing of Bullet with HACD}
 \begin{center}
-\begin{tabular}{|l|r|r|}
+\begin{tabular}{|r|l|r|l|}
 \hline
-\textbf{Sleeping Enabled} & \multicolumn{1}{l|}{\textbf{Number of objects}} & \multicolumn{1}{l|}{\textbf{Time/frame [ms]}} \\ \hline
-No & 512 & 51,9156 \\ \hline
-Yes  & 512 & 30,5515 \\ \hline
-No & 256 & 22,3175 \\ \hline
-Yes  & 256 & 13,298 \\ \hline
+\multicolumn{1}{|l|}{\textbf{Bullet HACD test}} & \textbf{Sleeping Enabled} & \multicolumn{1}{l|}{\textbf{Number of objects}} & \textbf{Time/frame [ms]} \\ \hline
+1 & No & 1024 & 94.665 \\ \hline
+2 & Yes  & 1024 & 78.317 \\ \hline
+3 & No & 512 & 51.9156 \\ \hline
+4 & Yes  & 512 & 30.5515 \\ \hline
+5 & No & 256 & 22.3175 \\ \hline
+6 & Yes  & 256 & 13.298 \\ \hline
 \end{tabular}
 \end{center}
 \label{tab:hacdtest}
 \end{table}
+
 
 \section{Results}
 The result of the simulation can be seen in figure~\ref{fig:hacd0.0} and figure~\ref{fig:tight}.
