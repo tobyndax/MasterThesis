@@ -66,9 +66,8 @@ to these two steps should be prioritized in the future.
 
 \subsection{Increasing grid size}
 This test measures the performance of the grid size. For a M-by-M-by-M grid we can detect collisions
-effectively on coordinates between -M/2 and +M/2 in each dimension.
-\subsection{Increasing number of bodies and dynamic particles}
-For this test we increase the number of bodies (and particles) in the system.
+efficently on coordinates between -M/2 and +M/2 in each dimension.
+
 \begin{figure}[H]
   \centering
   \includegraphics[width = 0.8\textwidth]{gridIncrease.png}
@@ -99,7 +98,7 @@ Also note that the time increase from cell size 2 to cell size 8 is only 0.34 ms
 This is cheaper than increasing the grid size from 32 to 128, which gives an increase of 0.93 ms.
 
 \subsection{Modified Normals}
-While difficult to say wether the end result is more or less physically correct
+While difficult to say wether the end result is more or less physically correct,
 what can be tested is the amount of stabilization iterations for which the simulation
 is still stable (i.e. avoids tunneling). The testing was performed on 5 by 5 by 5
 cubes so a decent amount of particles would have modified normals. Without modified
@@ -108,16 +107,14 @@ normals at 6 iterations there was severe tunneling between the objects. With rep
  and tunneling do occur, with modified normals we have a greater chance of the
  situation resolving itself since the edge particles will always push to separate
  the objects, much as the signed distance field described by~\cite{flex}.
- With weighted normals, as described in section~\ref{sec:modnorm}, some improvement
- could be seen and as few as 6 iterations could be used without tunneling.
 
 \subsection{Tighter voxelization}
 Tighter voxelization led to better collision result since the surface is modeled
 more accurately, in addition one could decrease the number of iterations needed
-for tunnel prevention and stability. This is most likely due to the reduce depth
-of the indentations between particles which lead to the normals and resulting forces more often
+for tunnel prevention and stability. This is most likely due to the reduced depth
+of the indentations between particles which led to the normals and resulting forces more often
 being directed outwards from the object with a lesser angle.
- With deep indentations between particles the forces will angled more steeply and
+ With deep indentations between particles the forces will be angled more steeply and
   some of the force will not be used for separating the objects.
 This method will take a penalty to the collision detection shader step in
 terms of performance since many of the bodies own particles will register as collisions
@@ -237,7 +234,7 @@ Since the velocity and impulse shader steps are iterated
 several times for stabilization these steps are quite vital to the performance
 of the method. More work could be spent on improving the performance of these shaders,
 but one should also investigate if the stabilization iterations could be exchanged for
-shock propagation. As already shown by the results achieved by~\cite{flex} with nVidia Flex.
+shock propagation, as indicated by the results achieved by~\cite{flex} with nVidia Flex.
 
 \subsection{Correctness}
 Correctness for spherical decomposition depend highly on how finely the model is

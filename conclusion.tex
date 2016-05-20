@@ -9,7 +9,7 @@ In this thesis as a baseline comparison a well established open source physics e
  indications that it would produce good results. It has therefore been implemented
  and tested for the purpose of acting as a baseline comparison.
 
-As suspected the Bullet with HACD produces good result with decent performance and
+As suspected Bullet with HACD produces good result with decent performance and
 the method includes very few design parameters. The approach with using HACD gives
 a robust and easily managed solution, with the only drawback being that the HACD
 may produce unexpected results for certain meshes. However, when this happen
@@ -18,14 +18,14 @@ one always has the alternative to design the sub shapes by hand in external appl
 \subsection{Spherical decomposition}
 In this thesis I have shown that a physics simulation based on impulses with
 calculations performed on the GPU is possible. Certain performance optimizations
-have been implemented but there are as always still more to have if more time is
-spent on the problem. In terms of performance the proposed solution can match of the shelf
-solutions (in the form of Bullet 2.83), when an object is decomposed into fewer than
-218 particles.
+have been implemented, but far from all avenues in this regard has been investigated.
+ In terms of performance the proposed solution can match of the shelf
+solutions (in the form of Bullet 2.83), when an object is decomposed into around
+200 particles.
 
 The solution scales better than Bullet with respect to number of objects in the scene,
-however quite a large number of bodies need to be in the scene for the GPU solution
-to be faster than Bullet.
+however quite a large number of bodies need to be in the scene for the GPU solution to
+outperform Bullet.
 
 The solution shows good promise, in addition to the results presented within this
 thesis report is the release of Flex by~\cite{flex} at nVidia
@@ -70,7 +70,7 @@ to be extended in a clever way as not to impact performance too heavily.
 
 Solid halfspheres, as described by~\cite{flex}, is the idea that the spheres that
 constitute the bodies can have modified normals on the inside of the objects to counteract
-tunneling. When two bodies become tangled the solid halfspheres modified normals
+tunneling. When two bodies become tangled the solid halfspheres' modified normals
 on the inside of the object ensure that the objects push apart and separate.
 
 Investigating alternative methods of solving the interpenetrations instead of velocity biasing.

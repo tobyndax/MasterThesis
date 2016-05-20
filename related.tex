@@ -99,7 +99,10 @@ processed in parallel, however a different approach is used for this thesis.
 
 \section{Mass splitting}\label{sec:massSplit}
 \cite{tonge} describes, in their paper, a parallel constraint based solver
-using mass splitting. A similar approach where we split the mass prior to
+using mass splitting, where objects are split and solved independently and superpositioned
+for the final result.
+
+A similar approach where we split the mass prior to
 calculating the impulses by the number of collision between the two bodies. The
 calculated impulses are then applied to the original object.
 
@@ -121,6 +124,10 @@ $\vec{j}$ before applying it to the bodies then becomes the following.
 \begin{equation}
   \vec{j}_{mass split} = \frac{\vec{j}}{k}
 \end{equation}
+
+While inspired by the mass splitting technique from~\cite{tonge}
+this is simply an application of the superposition-principle
+of forces.
 
 \section{Collision Detection}\label{sec:gridCD}
 \subsection{Spatial partitioning}
@@ -161,7 +168,7 @@ to what is described in~\cite{guendelman}.
 a scenario very similar to what this thesis aim to produce.
 While the end results are impressive in terms of simulating the scenario the performance
 is not particularly good. Dropping 500 rings consisting of 320 triangles averaged 3 minutes per frame.
-\subsection{Shock Propagation}
+
 In the same paper~\cite{guendelman} presents the Shock Propagation algorithm.
 By constructing a contact graph from the static objects in the scene, see figure~\ref{fig:cont},
 then solving the objects in contact with the static objects first, then change their
@@ -200,5 +207,4 @@ There are some automatic methods for convex decompositions, among them HACD deve
 \cite{HACD} investigated the use of HACD and found it to produce fewer hulls
 than previous methods while still approximating the original objects well.
 Mamou is currently working on a newer version of HACD called
-V-HACD, which among other things include GPU acceleration, this library will not be
-tested as it has not been integrated into Bullet 2.83 as of yet.
+V-HACD, which among other things include GPU acceleration.
