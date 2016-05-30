@@ -61,7 +61,7 @@ in the grid. For calculating the ids see equation~\ref{eq:id}.
   \vec{id} = \lfloor(\vec{p}-\vec{offset})/d\rfloor
 \end{equation}
 
-Accessing the correct bin, given $m$ bins per dimension and $\vec{id} = [idx,idy,idz]$, becomes:
+Accessing the correct bin, given $m$ bins per dimension and $\vec{id} = [idx,idy,idz]$, becomes:
 \begin{equation}
   binIndex = idx + idy*m + idz*m^2
 \end{equation}
@@ -104,7 +104,7 @@ being clamped to the grid, see figure~\ref{fig:gridStretch}.
 \begin{figure}[H]
   \centering
   \includegraphics[width = 0.8\textwidth]{gridstretch.png}
-  \caption{Visualized here is a $5x5$ grid. The sixteen central cell are $dxd$ in size while the cells on the edges extend infinitely due to clamping in the indexing.\label{fig:gridStretch}}
+  \caption{Visualized here is a $5x5$ grid. The sixteen central cells are $dxd$ in size while the cells on the edges extend infinitely due to clamping in the indexing.\label{fig:gridStretch}}
 \end{figure}
 
 However, the cells at the edges are technically infinite

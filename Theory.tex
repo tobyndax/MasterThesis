@@ -12,7 +12,7 @@ to what~\cite{flex} and~\cite{bulletPipeline} have presented with regards to
 constraint based physics. This thesis will describe a method for using it with
 impulse based physics while keeping the calculations on the GPU. The laws of motion and relevant vectors and variables
 for updating the states of the bodies are summarized in figure~\ref{fig:diag}.
-Subindices $a$ and $b$ refer to which body the variable belong to.
+Subindices $a$ and $b$ refer to which body the variable belong to.
 The variables used are; velocity, $v$; rotational velocity, $\omega$; vector to
 the collision point, $r$; mass, $m$; collision normal, $n$ and inertia tensor, $I$.
 
@@ -21,13 +21,13 @@ the collision point, $r$; mass, $m$; collision normal, $n$ and inertia tensor, $
   \includegraphics[width = 0.8\textwidth]{physicsscheme.png}
   \caption{Diagram of the relevant vectors and variables used when resolving a collision. Variables used are; velocity, $v$; rotational velocity, $\omega$; vector to
   the collision point, $r$; mass, $m$; collision normal, $n$ and inertia tensor, $I$.
-   Subindices $a$ and $b$ refer to which body the variable belong.}
+   Subindices $a$ and $b$ refer to which body the variable belong.}
   \label{fig:diag}
 \end{figure}
 
 \subsection{Laws of motion}
 The following equations govern the motions of rigid bodies are summarized by~\cite{hansson}. They are repeated here for reference.
-Here $\vec{P}$ refer to the the linear moment, $\vec{L}$ refer to the angular
+Here $\vec{P}$ refer to the the linear moment, $\vec{L}$ refer to the angular
 moment and $\vec{I}$ the inertia tensor of the body, expressed in the mass center of the body.
 
 \begin{equation}
@@ -86,7 +86,7 @@ collision between body A and body B.
 Please note that $\vec{j} = j\vec{\hat{n}}$ holds for all collisions and that the direction
 of $\vec{j}$ is always parallel to the collision normal. Below $\epsilon$ refer to the
 restitution coefficient and $\vec{v}_{rel,\vec{\hat{n}}}$ is the relative velocity
-between body $A$ and $B$ along the normal vector.
+between body $A$ and $B$ along the normal vector.
 
 \begin{equation}
   \vec{j} = \frac{-(1+\epsilon)\vec{v}_{rel,\vec{\hat{n}}}}
@@ -233,7 +233,7 @@ With this, equation~\ref{eq:j} is modified to read the following.
 To be able to simulate the rotations of the objects properly we need the inherent
 property of the object to resist rotation, the inertia tensor.
 In 2D this is simply a single value, at least when considering rotation around
-the center of mass. However, in 3D we instead use a $3x3$ matrix called the
+the center of mass. However, in 3D we instead use a $3x3$ matrix called the
 inertia tensor. According to~\cite{ragnemalmscream}, when the objects initial
 position is aligned with the objects principal axes, we can always write the inertia tensor
 as a diagonal matrix.
