@@ -21,7 +21,7 @@ decomposed in this manner, see figure~\ref{fig:bunnies}.
 \subsection{Spring-damper model}
 The spring-damper model is a model for collision response described in~\cite{gpugems} and by~\cite{fossum}.
 This model has the benefit of being quite easy to implement on both CPU and GPU.
-However, since there are two design parameters, the spring coefficient and the damping
+However, since there are two design parameters, the spring constant and the damping
 constant, the system can be difficult to tune. Often a parameter constellation that works
 well for one system will fail for another.
 
@@ -29,7 +29,7 @@ The equations below describe how the force and torque can be derived for this ty
 of model. The equations describe the forces for collision between sphere $i$ and $j$,
 where $k$ is the spring constant, $c$ the damping constant and $d$ the
 diameter of the sphere. In equation~\ref{eq:tangent}, $\hat{r}$ refers to the
-position of the particle relative to the center of the body.
+position of the particle (or sphere) relative to the center of the body.
 
 \begin{equation}
   \vec{f}_{i,spring} = -k(d-|\vec{r}_{ij}|)\frac{\vec{r}_{ij}}{|\vec{r}_{ij}|}
@@ -47,10 +47,9 @@ position of the particle relative to the center of the body.
   \vec{v}_{tangential} = \vec{\omega} \cross ( \vec{r}- \vec{\omega}\bullet\frac{\vec{\omega}}{|\vec{\omega}^2|})
 \end{equation}
 
-Note that the equations above are mass independent which might be one of the
-reasons for their common use with the particle method.
+Note that the equations above are mass independent.
 
-This method has two unknown parameters, $c$ and $k$, which must be tuned for the
+The parameters must be tuned for the
 specific system for stability. Often these parameters are determined through testing
 and the tests need to be redone for new setups.
 
@@ -72,14 +71,18 @@ parallel impulses is used.
   \centering
   \includegraphics[width = 0.8\textwidth]{ballsExpected.png}
   \caption{The expected result of the collision between the rigid body consisting
-  of the red balls and the rigid body consisting of the green balls.}
+  of the red balls and the rigid body consisting of the green balls.
+  In the figure M is the mass of the jointly rigid body consisting of
+  the two red and green balls respectively. The two bodies collide and energy and momenta is preserved.}
   \label{fig:ballsExpected}
 \end{figure}
 
 \begin{figure}[H]
   \centering
   \includegraphics[width = 0.8\textwidth]{ballsNoMassSplit.png}
-  \caption{Calculating all impulses in parallel can lead to too high end velocities.}
+  \caption{Calculating all impulses in parallel can lead to too high end velocities.
+  In the figure M is the mass of the jointly rigid body consisting of
+  the two red and green balls respectively. The two bodies collide and energy and momenta is not preserved.}
   \label{fig:noSplit}
 \end{figure}
 
@@ -106,9 +109,10 @@ for the final result.
 
 A similar approach would be to split the mass prior to
 calculating the impulses by the number of collisions between the two bodies. The
-calculated impulses are then applied to the original object.
+calculated impulses are then applied to the original object. The idea is visualized in figure~\ref{label{fig:masssplit}, where
+we get the expected result.
 
-\begin{figure}[H]
+\begin{figure}[H]\label{fig:masssplit}
   \centering
   \includegraphics[width = 0.8\textwidth]{ballsMassSplit.png}
   \caption{By mass splitting the objects by the number of interbody collisions
@@ -119,8 +123,8 @@ calculated impulses are then applied to the original object.
 For this method to be implementable we need to count the number of collisions between
 every body pair. This is described in further detail in section~\ref{sec:colMatrix}.
 
-With the impulse $\vec{j}$ defined as in equation~\ref{eq:finalJ},$\vec{j}$ is divided by
-the number of collisions between the collision pair, here defined as $k$. The final modification to
+The impulse, defined in equation 2.30, is divided by the number of collisions
+ between the bodies, here defined as k. The final modification to
 $\vec{j}$ before applying it to the bodies then becomes the following:
 
 \begin{equation}
@@ -137,7 +141,7 @@ of forces.
 by ways of a uniform grid for collision detection. This method is especially suitable
 for the spherical decomposition since we can select an optimized
 grid size for a fixed sphere radius. In addition~\cite{gpugems},~\cite{green} and~\cite{fastnearest} claim that sorting
-the collisions by bin number increases memory coherence and overall performance.
+the collisions by bin index increases memory coherence and overall performance.
 
 \subsection{Parallel Sweep-And-Prune}
 Parallel Sweep-And-Prune as investigated by~\cite{gpupipedev}, which in turn is based on~\cite{liu2010}, %Find this source
@@ -148,14 +152,14 @@ concerning the basics of Sweep-And-Prune, turn to the work of~\cite{SAPPierre}.
 \section{Time-stepping schemes}
 \cite{Lembcke} describes using Guendelman's time stepping
 algorithm. By detecting when the velocity is very small the contact impulses can be
-calculated by setting $\epsilon = 0$.
+calculated by setting $\epsilon = 0$ in equation~\ref{eq:finalJ}.
 Guendelman's time stepping algorithm is provided in pseudocode below, in accordance
 to what is described in~\cite{guendelman}.
 
 \begin{algorithm}[H]
   \begin{algorithmic}[1]
   \State DetectCollisions
-  \ForAll{collisions with v > 0}
+  \ForAll{collisions with |v| > 0}
     \State calculateImpulses
   \EndFor
   \State applyGravity
@@ -182,7 +186,9 @@ since each level of the graph needs to be processed before the next.
 \begin{figure}[H]
   \centering
   \includegraphics[width = 0.8\textwidth]{shock.png}
-  \caption{Contact graph traversing from the static ground upwards.}
+  \caption{Contact graph traversing from the static ground upwards. Each box
+  represents an object and the large rectangular block at the bottom of the
+  image represents a static ground. The distance is measured, as in how many collisions away from the static ground each object is. Each object is assigned a level based on this distance.}
   \label{fig:cont}
 \end{figure}
 

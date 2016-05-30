@@ -6,7 +6,7 @@ to simulate the scene instead.
 Bullet 2.83 contains a
 composite (or compound) shape, a shape container which contains sub-shapes and acts
 as a joint rigid body. Bullet updates the inertia of the object internally as
-more sub-shapes are added, as well as the bounding box needed for the SAP.
+more sub-shapes are added, as well as the bounding box needed for the Sweep-And-Prune (SAP).
 
 An implementation of HACD is included with Bullet's source code and the code is
 developed by Mamou, based on the work of~\cite{mamou}. Some input parameters are available. These have been
@@ -15,10 +15,10 @@ penalty weights, (i.e if it is possible to disregard a small concavity)
 and the maximum amount of points per convex hull.
 While effective in terms of convex decomposition, this method is not particularly
 effective in terms of performance. For instance, a Utah Teapot of around 4300 vertices
-takes approximately 25 seconds to decompose. In addition, the method is rotationally
+takes approximately 25 seconds to decompose, see figure~\ref{fig:hacdTeapot} for the result. In addition, the method is rotationally
  variant, so results may vary depending on the rotation of the object which is to be decomposed.
 
- \begin{figure}[H]
+ \begin{figure}[H]\label{fig:hacdTeapot}
    \centering
    \includegraphics[width = 0.8\textwidth]{hacdTeapot.png}
    \caption{The decomposition from HACD method, model left in initial orientation}
@@ -43,7 +43,7 @@ shape of the Utah Teapot, can be observed. Without the small rolling effect, Bul
 sleeping would take effect earlier and increase performance. One can expect that
 more rectangular objects will have better performance.
 
-The result of the simulation can be seen in figure~\ref{fig:hacd0.0} and figure~\ref{fig:tight}.
+The result of the simulation can be seen in figure~\ref{fig:hacd0.0} and~\ref{fig:tight}.
 \begin{figure}[H]
   \centering
   \includegraphics[width = 0.8\textwidth]{HACD512-05-11.png}
@@ -107,9 +107,10 @@ Yes  & 256 & 13.298 \\ \hline
 While the time necessary for the decomposition renders it implausible for online uses,
 it is still an excellent tool for a preprocessing step.
 The models can be
-decomposed at the start and copies of the same shape can be used, i.e. no additional
-HACD are performed. For this thesis the results were also saved to an Wavefront Object (.obj) file so that simple and quick
- loading of the decomposed models could be used while testing.
+decomposed at the start and copies of the same shape can be used, i.e. a single decomposition
+at the start of the program. For this thesis the results were also saved to an Wavefront Object (.obj) file so that simple and quick
+ loading of the decomposed models could be used while testing, i.e. a single decomposition was performed and the results reused, even if the program
+ was restarted.
 
 The performance of the whole system simulation, while not phenomenal, is fast enough
 for the generation of synthetic data, assuming that suitable simulation parameters

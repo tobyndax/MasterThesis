@@ -4,7 +4,7 @@ The parallel impulse solver was implemented using spherical decomposition as
  collision detection described in section~\ref{sec:gridCD}. Implementation details
  concerning the collision detection can be found in section~\ref{sec:implcd}.
 However, in this chapter we suggest solving rigid body dynamics on the GPU using spherical
-decomposition instead of using a spring-dampner model as in~\cite{gpugems} or constraint
+decomposition instead of using a spring-dampner model as in~\cite{gpugems}, or constraint
 based physics as~\cite{flex} suggests, we investigate the use of impulses.
 
 
@@ -15,9 +15,9 @@ this is to have a matrix $C$ keeping count of all collisions. $C_{i,j}$ would
 contain the number of collisions between body i and body j. This matrix would be
 zero throughout the diagonal and symmetric. Thus, Cji=Cij would be satisfied and
 therefore more data than required is allocated by letting $C$
-be an M-by-M matrix where only M/2-M elements are required (where M is the
+be an $MxM$ matrix where only $\frac{M^2}{2}-M$ elements are required (where $M$ is the
 number of bodies). This reduction in size
-has not been implemented, and instead the full M-by-M matrix is used.
+has not been implemented, and instead the full $MxM$ matrix is used.
 
 A reasonable location in the shader stages for adding the collisions is during
 the collision detection shader, each detected collision increments $C_{i,j}$
@@ -36,7 +36,7 @@ implemented with a size of $mxmxm$.
 
 \subsection{Grid construction}
 Initially we must count
-the number of spheres in each bin and then create the exclusive prefix sum for the sorting
+the number of spheres in each bin in the grid and then create the exclusive prefix sum for the sorting
 step. The exclusive prefix sum is calculated on the GPU as described in~\cite{gpugems}
 With the exclusive prefix sum we can reset the bin counters and start the sorting.
 The pseudocode below describes
@@ -53,9 +53,11 @@ the process.
 
 The hash function used for this thesis is a simple rounding down of the x,y,z coordinates, a
 division by the cell size ($d$), and an offset to center the grid over our specified domain.
-Domain here refers to the coordinates which the grid covers. From $-offset$ to $xd-offset$ along the
-x axis for example, where $d$ is the cell size and $x$ is the number of bins along the x axis.
-\begin{equation}
+Domain here refers to the coordinates which the grid covers, i.e. the range of valid positional ids
+in the grid. For calculating the ids see equation~\ref{eq:id}.
+%From $-offset$ to $xd-offset$ along the
+%x axis for example, where $d$ is the cell size and $x$ is the number of bins along the x axis.
+\begin{equation}\label{eq:id}
   \vec{id} = \lfloor(\vec{p}-\vec{offset})/d\rfloor
 \end{equation}
 
@@ -71,13 +73,17 @@ array. The two following figures describe the process of sorting through prefix 
 \begin{figure}[H]
   \centering
   \includegraphics[width = 0.8\textwidth]{prefix1.png}
-  \caption{By sorting the spheres we can get more coherent reads. Image inspired by~\cite{fastnearest}.}
+  \caption{By sorting the spheres we can get more coherent reads. Image inspired by~\cite{fastnearest}.
+  At the top of the figure the original particle order is displayed. Each bin has a line connecting it to the particles which lie within that bin, for visualization purposes only.
+  The particles are then reordered in bin-order. Particles that lie in bin 50 are placed before particles that lie in bin 51.}
 \end{figure}
 
 \begin{figure}[H]
   \centering
   \includegraphics[width = 0.8\textwidth]{prefix2.png}
-  \caption{The sorting can be performed through a exclusive prefix sum. Image inspired by~\cite{fastnearest}.}
+  \caption{The sorting can be performed through an exclusive prefix sum. Image inspired by~\cite{fastnearest}.
+  Particle one when reordering, is placed at the position indicated by the prefix sum of its bin. Particle two is placed at the first available location after particle one, i.e. position one.
+  Particle five is placed at position two as indicated by the prefix sum of the bin which that particle belong to.}
 \end{figure}
 
 The overall algorithm of the collision detection can be summarized as below.
@@ -98,7 +104,7 @@ being clamped to the grid, see figure~\ref{fig:gridStretch}.
 \begin{figure}[H]
   \centering
   \includegraphics[width = 0.8\textwidth]{gridstretch.png}
-  \caption{The cells on the edges extend infinitely due to a clamping.\label{fig:gridStretch}}
+  \caption{Visualized here is a $5x5$ grid. The sixteen central cell are $dxd$ in size while the cells on the edges extend infinitely due to clamping in the indexing.\label{fig:gridStretch}}
 \end{figure}
 
 However, the cells at the edges are technically infinite
@@ -111,22 +117,19 @@ The latter was faster during testing.
 
 This change results in many cells containing more particles to iterate over. This was still preferable to
  letting a few cells execute slower due to containing many more particles.
-This is not surprising since this is a
+It is not surprising since this is a
 parallel system. In the best case the execution time of the whole system would be
-the slowest path in total through the system. This is not however always the case
+the slowest path in total through the system. However, this is not always the case
 since not all particles can be executed in parallel.
 
 \section{Stabilization iterations} \label{sec:stabil}
 The velocity and impulse step are iterated several times to stabilize and solve
-interpenetrations by a percentage of the distance as previously described.
+interpenetrations by a percentage of the distance as previously described in section~\label{sec:v_bias}.
 
-The number of iterations needs to be high enough for the current situation, in
-figure~\ref{fig:iters} is a situation presented where the number of iterations (2) is too low.
+The number of iterations needs to be high enough for the current situation.
+Figure~\ref{fig:iters} is a situation presented where the number of iterations (2) is too low.
  When too few iterations are used tunneling can occur
-and in some extreme cases the bottom cubes have begun penetrating through the bin.
-
-The spheres are assumed to be in contact however
-the figure leaves some space between them to make the figure more readable.
+and in some extreme cases the objects at the bottom have begun penetrating through the bin.
 
 \begin{figure}[H]
   \centering
@@ -142,9 +145,11 @@ the number of iterations needs to increase or a smaller time step is needed.
 Since the spheres can be seen as a type of collision proxy shape for the true object,
 it is reasonable to investigate what would happen if instead of the sphere's normals
 the original object's normals were used for collision resolution. For the cube only
-spheres that lie on the faces of the cube have their normals modified, the corners
+spheres that lie on the faces have their normals modified, the corners
 and edges are left with their original normals. The result of the modified normals
-is presented in section~\ref{sec:resmodnorm}.
+is presented in section~\ref{sec:resmodnorm}. The spheres are assumed to be in contact however
+the figure leaves some space between them to make the figure more readable.
+
 
 \begin{figure}[H]
   \centering
@@ -190,7 +195,7 @@ among the candidates. All candidates reside in the 26 surrounding neighboring
 grid cells and the particles' own cell. The distances are measured between all
 candidates and the actual collisions are saved to a contact manifold.
 For this implementation a finite number of
-contacts can be assigned to the manifold. For completely solid spheres eight spheres
+contacts can be assigned to the manifold. For completely solid spheres eight
 is the theoretical maximum of contacts. However, since we use discrete time steps
 the spheres could theoretically overlap and more information would need to be saved.
 On the other hand most spheres have neighboring spheres in the same body which cannot
@@ -201,7 +206,7 @@ during all the testing no significant error could be seen.
 
 The collisions are transferred between shader by storing them in a contact manifold.
 The contact manifold contains space for the particle id of the other colliding particle,
-the impulse to be applied and the normal along which we should apply the impulse.
+the impulse to be applied and the normal along which we should apply it.
 In the current implementation the maximum amount of collisions transferred for a
 particle is four. However, this leaves room for error as with interpenetrating particles
 more than four collision per particle can happen. Testing has shown that this happens
@@ -226,7 +231,7 @@ Since no atomicAdd for float is supported in OpenGL 4.5, this is done through a 
 \footnote{There are ways to exploit atomic add for integers to emulate close to floating point atomic add (fixed point arithmetics), this has not been investigated further.}
 For each particle add the influence from the current particle to the body.
 Since internal particles have no influence on the simulation
-those should be removed to increase performance of this shader step.
+those are removed to increase performance of this shader step.
 % Since OpenGL 4.5 do not always support dynamic length for loops the loop is coded
 % to be very long, say 4096, and exit through a break when the final sphere of the body
 % is reached.

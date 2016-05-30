@@ -5,22 +5,30 @@ According to~\cite{baberrigid} there are three major methods for solving rigid b
 dynamics; penalty methods, impulse methods and constraint based methods.
 In common with most methods for rigid body dynamics is the need for the governing laws of
 motion which move the simulation forward in time. In addition methods for collision detection
-and collision response is needed. The collision detection, due to its planned use for GPU collision
-detection, will be limited to a uniform grid/sort-based method, as described by~\cite{gpugems}.
+and collision response is needed. The planned use of a GPU collision
+detection will be limited to a uniform grid/sort-based method, as described by~\cite{gpugems}.
 The methods of using mass splitting and spherical decomposition are very similar
 to what~\cite{flex} and~\cite{bulletPipeline} have presented with regards to
 constraint based physics. This thesis will describe a method for using it with
-impulse based physics while keeping the calculations on the GPU. The laws of motion and equations
-for updating the state variables are summarized in figure~\ref{fig:diag}.
+impulse based physics while keeping the calculations on the GPU. The laws of motion and relevant vectors and variables
+for updating the states of the bodies are summarized in figure~\ref{fig:diag}.
+Subindices $a$ and $b$ refer to which body the variable belong to.
+The variables used are; velocity, $v$; rotational velocity, $\omega$; vector to
+the collision point, $r$; mass, $m$; collision normal, $n$ and inertia tensor, $I$.
+
 \begin{figure}[H]
   \centering
   \includegraphics[width = 0.8\textwidth]{physicsscheme.png}
-  \caption{Diagram of the relevant vectors and variables used when resolving a collision.}
+  \caption{Diagram of the relevant vectors and variables used when resolving a collision. Variables used are; velocity, $v$; rotational velocity, $\omega$; vector to
+  the collision point, $r$; mass, $m$; collision normal, $n$ and inertia tensor, $I$.
+   Subindices $a$ and $b$ refer to which body the variable belong.}
   \label{fig:diag}
 \end{figure}
 
 \subsection{Laws of motion}
 The following equations govern the motions of rigid bodies are summarized by~\cite{hansson}. They are repeated here for reference.
+Here $\vec{P}$ refer to the the linear moment, $\vec{L}$ refer to the angular
+moment and $\vec{I}$ the inertia tensor of the body, expressed in the mass center of the body.
 
 \begin{equation}
   \frac{d\vec{P}}{dt}=m\frac{d\vec{v}}{dt} = \vec{f}
@@ -70,13 +78,15 @@ and derivations of the results below, and it is recommended that the interested 
 his work.
 
 Solving physics using the impulse method has the benefit of having few external tuning
-parameters. In the suggested implementation tuning parameters could be, $\Delta t$,
-$\mu$ and the bias factor.
+parameters. In the suggested implementation tuning parameters could be; $\Delta t$, the time step;
+$\mu$, the friction coefficient, and the bias factor which is explained further in section~\ref{sec:bias}.
 
 The following equation can be used to calculate the impulse created in the
 collision between body A and body B.
 Please note that $\vec{j} = j\vec{\hat{n}}$ holds for all collisions and that the direction
-of $\vec{j}$ is always parallel to the collision normal.
+of $\vec{j}$ is always parallel to the collision normal. Below $\epsilon$ refer to the
+restitution coefficient and $\vec{v}_{rel,\vec{\hat{n}}}$ is the relative velocity
+between body $A$ and $B$ along the normal vector.
 
 \begin{equation}
   \vec{j} = \frac{-(1+\epsilon)\vec{v}_{rel,\vec{\hat{n}}}}
@@ -120,7 +130,7 @@ In the equations, the tangent can be calculated as described below:
 \end{equation}
 
 \subsection{Replacing force with impulses}
-Assuming that we have the impulse created between body A and body B, the following
+Assuming that we have the impulse created between body $A$ and $B$, the following
 equations can be used to update the state. The impulse is applied along the collision normal.
 The equations regarding velocity updates are given below, where $\vec{r}$
 is referring to the vector to the body's mass center (also refer to figure~\ref{fig:diag}).
@@ -179,7 +189,7 @@ With the quaternion defined as in equation~\ref{eq:quatDef}, the multiplication 
 \end{equation}
 
 The equations concerning quaternion updates closely follow what is described by~\cite{fossum}.
-\subsection{Velocity biasing}
+\subsection{Velocity biasing}\label{sec:bias}
 Using the equations as laid out above with a fixed time-step, a situation might arise
 where two moving spheres interpenetrate each other. This situation has to either be resolved or somehow avoided.
 To avoid it, one can calculate the first time of impact in the system globally and
@@ -193,7 +203,7 @@ phenomenon through a non-physical solution. Introducing large energies into the
 system could potentially destabilize the system, therefore only a fraction of the
 interpenetration is solved each iteration, and the impulse-velocity steps are iterated
 several times instead to ensure smooth and careful solving of the interpenetration.
-In addition a slop variable $\delta_{slop}$ is introduced so that some overlap of geometries
+In addition a slop variable, $\delta_{slop}$, is introduced so that some overlap of geometries
 is allowed before correction starts. This relaxes the system since some interpenetration is
 allowed and penalty forces are used to resolve the interpenetration.
 Please refer to figure~\ref{fig:slop}.
@@ -206,11 +216,11 @@ Please refer to figure~\ref{fig:slop}.
   \label{fig:slop}
 \end{figure}
 
-\begin{equation}
+\begin{equation}\label{eq:v_bias}
   v_{bias} = \frac{\beta}{\Delta t}max(0, \delta-\delta_{slop})
 \end{equation}
 
-Where $\beta$ between 0.1 and 0.3 are reasonable values according to~\cite{catto2006}.
+In equation~\ref{eq:v_bias}, selecting $\beta$ between 0.1 and 0.3 are reasonable values according to~\cite{catto2006}.
 With this, equation~\ref{eq:j} is modified to read the following.
 
 \begin{equation}\label{eq:finalJ}

@@ -98,9 +98,9 @@ Also note that the time increase from cell size 2 to cell size 8 is only 0.34 ms
 This is less computationally complex than increasing the grid size from 32 to 128, which gives an increase of 0.93 ms.
 
 \subsection{Modified Normals}\label{sec:resmodnorm}
-While difficult determine wether the end result is more or less physically correct,
-it can be tested how for how many stabilization iterations the simulation
-is still stable (i.e. avoids tunneling). The testing was performed on 5x5x5
+While difficult to determine wether the end result is more or less physically correct,
+it can be tested for how many stabilization iterations the simulation
+is still stable (i.e. avoids tunneling). The testing was performed on $5x5x5$
 cubes, so a reasonable amount of particles should have modified normals. Without modified
 normals at 6 iterations there was severe tunneling between the objects. With replaced normals
  as low as 4 iterations gave no tunneling. In addition when using too few iterations
@@ -195,7 +195,7 @@ Currently in the velocity update shader there is a for-loop across all the spher
 belonging to the current body. This is done to gather all the forces from the spheres.
 To ensure performance on the GPU one uses unrolling, i.e. the for-loops content is
 duplicated for as many iterations as necessary. However, on the GPU this means two things:
-for-loops with dynamic length can cause problems or increased runtime and there is a upper
+for-loops with dynamic length can cause problems or increased runtime and there is an upper
 bound on the number of iterations that are allowed. For the hardware used for the thesis,
 this limit is 4096. Therefor the method is currently limited to a maximum of 4096
 spheres per body.
