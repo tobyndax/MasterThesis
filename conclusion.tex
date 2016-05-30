@@ -1,6 +1,6 @@
 \chapter{Conclusion and future work}
-With both a CPU and GPU method implemented this chapter will discuss the benefits
-and disadvantages of the two methods.
+With both a CPU and GPU method implemented this chapter will present the findings
+of this project and discuss future improvements.
 \section{Conclusion}
 \subsection{HACD}
 In this thesis as a baseline comparison a well established open source physics engine
@@ -10,20 +10,20 @@ In this thesis as a baseline comparison a well established open source physics e
  and tested for the purpose of acting as a baseline comparison.
 
 As suspected Bullet with HACD produces good result with decent performance and
-the method includes very few design parameters. The approach with using HACD gives
+the method includes very few design parameters. The approach using HACD gives
 a robust and easily managed solution, with the only drawback being that the HACD
 may produce unexpected results for certain meshes. However, when this happen
 one always has the alternative to design the sub shapes by hand in external applications.
 
 \subsection{Spherical decomposition}
-In this thesis I have shown that a physics simulation based on impulses with
+In this thesis we have shown that a physics simulation based on impulses with
 calculations performed on the GPU is possible. Certain performance optimizations
-have been implemented, but far from all avenues in this regard has been investigated.
- In terms of performance the proposed solution can match of the shelf
+have been implemented, but far from all options have been investigated.
+ In terms of performance the proposed solution can match established
 solutions (in the form of Bullet 2.83), when an object is decomposed into around
 200 particles.
 
-The solution scales better than Bullet with respect to number of objects in the scene,
+The solution scales better than Bullet with respect to the number of objects in the scene,
 however quite a large number of bodies need to be in the scene for the GPU solution to
 outperform Bullet.
 
@@ -53,7 +53,7 @@ large distances.
 
 Investigating the use of the Parallel-Sweep-And-Prune algorithm instead of the
 uniform sorted grid for collision detection, a method which would most likely
-benefit for larger objects as they work on bounding boxes and could be performed
+benefit larger objects as they work on bounding boxes and could be performed
 in a two step fashion. First detecting whole bodies which may have collision.
 Remove particles which belong to non-colliding bodies and redo the collision detection
 on all remaining particles. In addition this method would support differently sized
@@ -62,13 +62,13 @@ particles better than the current one.
 The collision carrier structure, the contact manifold, currently only carries
 4 collisions per particle. This limits the system in two ways, the system can miss
 collisions when more than 4 collisions occur simultaneously on a particle and the
-system is unfit to use differently sized particles. The larger particles would
+system is unfit to use differently sized particles. Larger particles would
 be likely to experience more simultaneous collisions than four and the system would
 lose needed information. Extending this collision transfer structure to become dynamic
-in size would be an interesting and needed feature, however it would most likely have
-to be extended in a clever way as not to impact performance too heavily.
+in size would be an useful feature, however it would most likely have
+to be extended carefully as not to impact performance too heavily.
 
-Solid halfspheres, as described by~\cite{flex}, is the idea that the spheres that
+Solid halfspheres, as described by~\cite{flex}, are based on the idea that the spheres that
 constitute the bodies can have modified normals on the inside of the objects to counteract
 tunneling. When two bodies become tangled the solid halfspheres' modified normals
 on the inside of the object ensure that the objects push apart and separate.

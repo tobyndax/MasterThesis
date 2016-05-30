@@ -1,67 +1,45 @@
 \chapter{Parallel Impulse Solver}\label{cha:impl}
-The parallel impulse solver will be implemented using spherical decomposition as
+The parallel impulse solver was implemented using spherical decomposition as
  described in section~\ref{sec:decomp}, using the grid based and sorted output
  collision detection described in section~\ref{sec:gridCD}. Implementation details
  concerning the collision detection can be found in section~\ref{sec:implcd}.
-In this chapter I suggest solving rigid body dynamics on the GPU using spherical decomposition
-however instead of using a spring-dampner model as in~\cite{gpugems} or constraint
-based physics as~\cite{flex} suggests, I investigate the use of impulses.
+However, in this chapter we suggest solving rigid body dynamics on the GPU using spherical
+decomposition instead of using a spring-dampner model as in~\cite{gpugems} or constraint
+based physics as~\cite{flex} suggests, we investigate the use of impulses.
 
-\section{Modified Normals}\label{sec:modnorm}
-Since the particles can be seen as a type of collision proxy shape for the true object,
-it is reasonable to investigate what would happen if instead of the sphere's normals,
-the original object's normals were used for collision resolution. For the cube only
-sphere's that lies on the faces of the cube have their normals modified, the corners
-and edges are left with their original normals.
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width = 0.9\textwidth]{modifiedNormals04-27.png}
-  \caption{Red spheres have their normals modified and the normals are rendered as lines.}
-  \label{fig:modnorm}
-\end{figure}
-
-\section{Tighter voxelization}
-By tightening the voxelization, while still using the same radius on the particles,
-i.e. let the particles overlap within the body, we effectively change the surface
-normals, overall this will lead to a smoother surface at the cost of increasing the number
-of particles needed. Tighter voxelization is related to modified normals as the new
-representation now more accurately models the surface and it's normals. In figure~\ref{fig:modnorm}
-the spheres have been tightened and overlap.
 
 \section{Collision matrix}\label{sec:colMatrix}
 As previously mentioned in section~\ref{sec:massSplit} we need to count the collisions
-between all collision pairs to acquire correct impulses. A decent way to perform
-this is to keep a matrix $C$ keeping count of all collisions. $C_{i,j}$ would
-contain the number of collision between body i and body j. This matrix would be
-zero throughout the diagonal and symmetric. $C_{i,j} = C_{j,i}$ would
-be satisfied and technically more data than required is allocated by letting $C$
+between all collision pairs to acquire correct impulses. One way to do
+this is to have a matrix $C$ keeping count of all collisions. $C_{i,j}$ would
+contain the number of collisions between body i and body j. This matrix would be
+zero throughout the diagonal and symmetric. Thus, Cji=Cij would be satisfied and
+therefore more data than required is allocated by letting $C$
 be an M-by-M matrix where only M/2-M elements are required (where M is the
 number of bodies). This reduction in size
 has not been implemented, and instead the full M-by-M matrix is used.
 
-A reasonable location in the shader stages for adding the collisions are during
+A reasonable location in the shader stages for adding the collisions is during
 the collision detection shader, each detected collision increments $C_{i,j}$
  through an atomic increment. A drawback of the atomic
- operations are that they may affect the performance of shaders negatively. In
- other words, the benefit that an algorithm comes with have to outweigh the potentially
+ operations is that they may affect the performance of shaders negatively. In
+ other words, the benefits of using atomic operations has to outweigh the potentially
  slow atomic operations.
 
-\section{Collision Detection}\footnote{\textcolor{blue!80}{I am uncertain if this section should move to related work instead.}}\label{sec:implcd}
-Initially a brute force collision detection was tested. With $O(n^2)$ it was too
-slow and had poor scaling as expected. Instead the spatial partitioning with sorting
+\section{Collision detection}\label{sec:implcd}
+Initially, a brute force collision detection was tested. With $O(n^2)$, it was too
+slow and had poor scaling as expected. Instead, spatial partitioning with sorting
 was implemented.
-Each cell in the grid is $d x d x d$ where $d$ is the diameter of the largest sphere
-present in the system. The grid represents 3D space and for simplicity the grid is
-implemented as being $mxmxm$.
+Each cell in the grid has the size $d x d x d$ where $d$ is the diameter of the largest sphere
+present in the system. The grid represents a 3D space, and for simplicity the grid is
+implemented with a size of $mxmxm$.
 
 \subsection{Grid construction}
-When using the sorting version of the grid construction, initially we need to count
+Initially we must count
 the number of spheres in each bin and then create the exclusive prefix sum for the sorting
-step. The exclusive prefix sum is calculated on the GPU as described in GPUGems chapter 39.
-With the exclusive prefix sum at hand we can reset the bin counters and start the sorting.
-For each sphere calculate which bin it belongs to, at the bin index check the prefix sum,
-use the prefix sum as index for ordering the particles. The pseudocode below describe
+step. The exclusive prefix sum is calculated on the GPU as described in~\cite{gpugems}
+With the exclusive prefix sum we can reset the bin counters and start the sorting.
+The pseudocode below describes
 the process.
 
 \begin{algorithm}[H]
@@ -73,36 +51,36 @@ the process.
 \end{algorithmic}
 \end{algorithm}
 
-The hash function used for this thesis is a simple flooring of the x,y,z coordinates, a
-division by the cell size ($d$) and an offset to let us center the grid over our specified domain.
+The hash function used for this thesis is a simple rounding down of the x,y,z coordinates, a
+division by the cell size ($d$), and an offset to center the grid over our specified domain.
 Domain here refers to the coordinates which the grid covers. From $-offset$ to $xd-offset$ along the
-x axis for example, where $d$ is the cellsize and $x$ is the number of bins along the x axis.
+x axis for example, where $d$ is the cell size and $x$ is the number of bins along the x axis.
 \begin{equation}
-  \vec{id} = floor((\vec{p}-\vec{offset})/d)
+  \vec{id} = \lfloor(\vec{p}-\vec{offset})/d\rfloor
 \end{equation}
 
-Accessing the correct bin, given m bins per dimension and $\vec{id} = [idx,idy,idz]$, becomes:
+Accessing the correct bin, given $m$ bins per dimension and $\vec{id} = [idx,idy,idz]$, becomes:
 \begin{equation}
   binIndex = idx + idy*m + idz*m^2
 \end{equation}
 
 The prefix sum ensures we know beforehand how much space (or number of particles)
-each bin needs. With the atomic add we can properly index into that subspace of the
+each bin needs. The atomic add allows us to index the correct subspace of the
 array. The two following figures describe the process of sorting through prefix summation.
 
 \begin{figure}[H]
   \centering
   \includegraphics[width = 0.8\textwidth]{prefix1.png}
-  \caption{By sorting the spheres we can get more coherent reads.}
+  \caption{By sorting the spheres we can get more coherent reads. Image inspired by~\cite{fastnearest}.}
 \end{figure}
 
 \begin{figure}[H]
   \centering
   \includegraphics[width = 0.8\textwidth]{prefix2.png}
-  \caption{The sorting can be performed through a exclusive prefix sum.}
+  \caption{The sorting can be performed through a exclusive prefix sum. Image inspired by~\cite{fastnearest}.}
 \end{figure}
 
-The overall flow of the collision detection can be summarized as below.
+The overall algorithm of the collision detection can be summarized as below.
 
 \begin{algorithm}[H]
   \begin{algorithmic}[1]
@@ -124,31 +102,31 @@ being clamped to the grid, see figure~\ref{fig:gridStretch}.
 \end{figure}
 
 However, the cells at the edges are technically infinite
-in size (limited by data types) and can therefore contain a very large amount of particles and the collision
-detection step may suffer greatly in performance. Consider the following two situations;
+in size (limited only by the limits of the used data types) and can therefore contain a very large amount of particles and thus the collision
+detection step may suffer greatly in performance. Consider the following two situations:
 About half of the particles are initially outside the simulation domain; The grid's
 cell size is doubled thus moving most of the particles previously outside into the domain, but
 each collision detection will have to search through more particles.
 The latter was faster during testing.
 
 This change results in many cells containing more particles to iterate over. This was still preferable to
- letting a few cells execute slower due to containing many many more particles.
+ letting a few cells execute slower due to containing many more particles.
 This is not surprising since this is a
 parallel system. In the best case the execution time of the whole system would be
 the slowest path in total through the system. This is not however always the case
-since not all particles can execute in parallel.
+since not all particles can be executed in parallel.
 
 \section{Stabilization iterations} \label{sec:stabil}
 The velocity and impulse step are iterated several times to stabilize and solve
 interpenetrations by a percentage of the distance as previously described.
 
 The number of iterations needs to be high enough for the current situation, in
-figure~\ref{fig:iters} is a situation where the number of iterations is too low, with the
-number of iterations being 2. When too few iterations are used tunneling can occur
+figure~\ref{fig:iters} is a situation presented where the number of iterations (2) is too low.
+ When too few iterations are used tunneling can occur
 and in some extreme cases the bottom cubes have begun penetrating through the bin.
 
 The spheres are assumed to be in contact however
-the figure leaves some space between them for easier reading of the figure.
+the figure leaves some space between them to make the figure more readable.
 
 \begin{figure}[H]
   \centering
@@ -158,11 +136,35 @@ the figure leaves some space between them for easier reading of the figure.
 \end{figure}
 
 Unfortunately with higher stacking and increased number of objects in tight proximity,
-the number of iterations needed increase or a smaller time step is needed.
+the number of iterations needs to increase or a smaller time step is needed.
+
+\section{Modified normals}\label{sec:modnorm}
+Since the spheres can be seen as a type of collision proxy shape for the true object,
+it is reasonable to investigate what would happen if instead of the sphere's normals
+the original object's normals were used for collision resolution. For the cube only
+spheres that lie on the faces of the cube have their normals modified, the corners
+and edges are left with their original normals. The result of the modified normals
+is presented in section~\ref{sec:resmodnorm}.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width = 0.9\textwidth]{modifiedNormals04-27.png}
+  \caption{Red spheres have their normals modified and the normals are rendered as lines.}
+  \label{fig:modnorm}
+\end{figure}
+
+\section{Tighter voxelization}
+By tightening the voxelization, while still using the same radius on the particles,
+i.e. let the particles overlap within the body, we effectively change the surface
+normals. Overall this will lead to a smoother surface at the cost of increasing the number
+of particles needed. A smoother surface might reduce the number of stabilization iterations needed.
+Tighter voxelization is related to modified normals as the new
+representation now more accurately models the surface and it's normals. In figure~\ref{fig:modnorm}
+the spheres have been tightened and overlap. The result of the tightened voxelization is presented in section~\ref{sec:tight}.
 
 \section{Shader structure}
-For this implementation OpenGL 4.5 with Compute Shaders are used as the interface
-for the GPU. In Compute Shaders there are several tools for workgroup synchronization
+For this implementation OpenGL 4.5 with Compute Shaders are used to program the GPU.
+ In Compute Shaders there are several tools for workgroup synchronization
 but to synchronize globally across different workgroups one need to split the program into
 different shaders and synchronize from the CPU. This is done by ways of barrier bits. Global synchronization
 is performed between every shader, i.e. between each box in the flow chart, in the figure~\ref{fig:flow}. Green
@@ -176,15 +178,15 @@ sphere, whereas the blue dispatch across bodies instead.
   \label{fig:flow}
 \end{figure}
 
-\subsection{Collision Detection}
+\subsection{Collision detection}
 The collision detection is performed through sorting and spatial partitioning.
 The main problems with this approach is the limited domain which can be simulated.
 The bins size should, for optimal search conditions, be exactly the diameter of the largest
-particle in the system however larger bins can be used with the penalty that more
-particles has to be checked. However, this results in a larger valid simulation domain.
+particle in the system, albeit larger bins can be used with the penalty that more
+particles have to be checked. However, this results in a larger valid simulation domain.
 
 When the collision grid and reordering is done one can find the actual collisions
-among the candidates. All candidates reside in the the 26 surrounding neighboring
+among the candidates. All candidates reside in the 26 surrounding neighboring
 grid cells and the particles' own cell. The distances are measured between all
 candidates and the actual collisions are saved to a contact manifold.
 For this implementation a finite number of
@@ -198,32 +200,30 @@ of four collisions are saved. This could potentially lead to incorrect results b
 during all the testing no significant error could be seen.
 
 The collisions are transferred between shader by storing them in a contact manifold.
-The contact manifold contain space for the particle id of the other colliding particle,
+The contact manifold contains space for the particle id of the other colliding particle,
 the impulse to be applied and the normal along which we should apply the impulse.
 In the current implementation the maximum amount of collisions transferred for a
-particle is four. While this leaves room for error as with interpenetrating particles
+particle is four. However, this leaves room for error as with interpenetrating particles
 more than four collision per particle can happen. Testing has shown that this happens
 rarely and gives only a small impact on the outcome, it does however give a big
 performance increase when transferring fewer contacts.
 
 In the collision detection the number of collisions between body pairs is also determined.
 
-
-\subsection{Impulse Calculation}
+\subsection{Impulse calculation}
 The contact manifold contain all the contacts for this sphere and the respective
-id's of the spheres. For each id in the manifold read the counterpart sphere and
-then calculate the impulse as described in the theory chapter. The contact manifold
+id's of the spheres. For each id in the manifold the counterpart sphere is read and
+then the impulse is calculated as described in the theory chapter. The contact manifold
 also contain enough space to save the impulses and a normal direction to be used
 in the velocity step. By not simply accumulating the forces in the sphere and keeping
 both the impulse and the direction we can reconstruct the collision point when updating
-the velocity, this becomes extra important for low resolution decompositions.
+the velocity. This becomes extra important for low resolution decompositions.
 
-
-\subsection{Velocity Update}
-This shader step dispatches across all bodies instead of across the particles, this
+\subsection{Velocity update}
+This shader step dispatches across all bodies instead of across the particles. This
 is necessary as we need to sum all the impulses from all the particles in the body.
-Since no atomicFloat is supported in OpenGL 4.5, this is done through a gather scheme.
-\footnote{There are ways to exploit atomic add for integers to emulate close to floating point atomic add, this has not been investigated further.}
+Since no atomicAdd for float is supported in OpenGL 4.5, this is done through a gather scheme.
+\footnote{There are ways to exploit atomic add for integers to emulate close to floating point atomic add (fixed point arithmetics), this has not been investigated further.}
 For each particle add the influence from the current particle to the body.
 Since internal particles have no influence on the simulation
 those should be removed to increase performance of this shader step.
@@ -238,10 +238,10 @@ a pre-velocity step was added were the calculations for the velocity was perform
 on a per particle basis and the much faster shared memory was utilized to avoid
 read-write collisions. Each workgroup got a shared array with enough space to save
 each particles' torque and linear moments. For the initial implementation the scaling of
-the velocity step was very poor. For the tests the amount of particles in total in the
+the velocity step was very poor. For the tests the total amount of particles in the
 system was kept constant but the amount of particles per body was increased for each test.
 This results in fewer bodies in total for each new test. The results can be seen in figure~\ref{fig:velScale1}.
-For the more workload aware implementation the results can be seen in~\ref{fig:velScale2}.
+For the more workload aware implementation, the pre-velocity step, the results can be seen in~\ref{fig:velScale2}.
 As one can easily see the latter scales much more reasonably.
 
 \begin{figure}[H]
@@ -261,7 +261,7 @@ As one can easily see the latter scales much more reasonably.
 The flowchart is updated accordingly to what can be seen in figure~\ref{fig:shaderflow2}.
 The calculations performed in the velocity pre-calculation step could just as easily
 be implemented into the impulse shader step instead, but has been given a separate shader
-step for readability.
+step for maintainability.
 
 \begin{figure}[H]
   \centering
@@ -270,13 +270,14 @@ step for readability.
   \label{fig:shaderflow2}
 \end{figure}
 
-\subsection{Position Update}
-This shader updates the bodies' states through integration as described in the theory chapter.
+
+After the velocities have been updated the positions and orientation can be
+updated through integration as described in the theory chapter.
 
 \section{Optimizations}
 \subsection{Impulses}
 In the impulse shader we need to fetch all the other particles which have a collision
-with the current particle. Prefetching these to a local variable before doing any
+with the current particle. Storing these to a local variable before doing any
 calculations doubled performance.
 
 \begin{algorithm}[H]
@@ -291,6 +292,6 @@ calculations doubled performance.
 
 \subsection{Velocity update}
 When calculating the forces' contributions to the velocities once again local variables
-are used and synchronizations. This time the aim is two fold, one fast writes during
-calculations to the local variables and coherent writes to buffer memory once all
+are used and synchronizations. This time the aim is two fold: fast writes during
+calculations to the local variables, and coherent writes to buffer memory once all
 calculations are done.

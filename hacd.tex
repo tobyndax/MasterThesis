@@ -3,19 +3,19 @@ Hierarchical approximate convex decomposition (HACD) can be used to decompose
 concave objects into a collection of convex objects. These objects can be used
 to simulate the scene instead.
 \section{Implementation}
-Bullet 2.83 contain a
-composite (or compound) shape, a shape container which contain sub-shapes and act
+Bullet 2.83 contains a
+composite (or compound) shape, a shape container which contains sub-shapes and acts
 as a joint rigid body. Bullet updates the inertia of the object internally as
 more sub-shapes are added, as well as the bounding box needed for the SAP.
 
 An implementation of HACD is included with Bullet's source code and the code is
-developed by Mamou and based on the work of~\cite{mamou}. Some input parameters are available, these have been
-left as the recommended parameters. The parameters control for instance, concavity
-penalty weights, (i.e if you can disregard a small concavity)
+developed by Mamou, based on the work of~\cite{mamou}. Some input parameters are available. These have been
+left as the recommended parameters. The parameters control for instance concavity
+penalty weights, (i.e if it is possible to disregard a small concavity)
 and the maximum amount of points per convex hull.
-The method while effective in terms of convex decomposition can not be described as
-particularly effective in terms of performance. A Utah Teapot of around 4300 vertices,
-takes approximately 25 seconds to decompose. The method is in addition rotationally
+While effective in terms of convex decomposition, this method is not particularly
+effective in terms of performance. For instance, a Utah Teapot of around 4300 vertices
+takes approximately 25 seconds to decompose. In addition, the method is rotationally
  variant, so results may vary depending on the rotation of the object which is to be decomposed.
 
  \begin{figure}[H]
@@ -25,8 +25,8 @@ takes approximately 25 seconds to decompose. The method is in addition rotationa
    \label{fig:HACD}
  \end{figure}
 
-The models are added in a three dimensional grid above the bin and the simulation
-is started. In figure~\ref{fig:hacdStart} is a figure of the start position.
+The models are added in a three dimensional grid above the bin before the simulation
+is started. Figure~\ref{fig:hacdStart} shows the start position.
 
 \begin{figure}[H]
   \centering
@@ -35,41 +35,14 @@ is started. In figure~\ref{fig:hacdStart} is a figure of the start position.
   \label{fig:hacdStart}
 \end{figure}
 
-During a simulation much more time is spent in the last
+During a simulation, much more time is spent in the last
 part of the simulation when most of the models are quite stationary and only small
 changes are made. The increased frametime in the later parts of the simulation is
-due to the many contacts between the objects. A lot of small rolling motions, likely due to the round
-shape of the Utah Teapot can be observed. Without the small rolling effect Bullet's
+due to the many contacts between the objects. A lot of small, rolling motions, likely due to the round
+shape of the Utah Teapot, can be observed. Without the small rolling effect, Bullet's
 sleeping would take effect earlier and increase performance. One can expect that
 more rectangular objects will have better performance.
 
-\section{Performance}
-For testing, a Utah teapot consisting of 12 submodels were used. Each submodel have
-between 50 and 100 vertices. A timestep of 0.01 seconds were used. All timings
-presented are without rendering. All tests measure simulation
-time and averages the result across 2000 iterations. For the first test, Bullets' sleeping was
-disabled and the second the sleeping was left enabled. The results are presented
-in table~\ref{tab:hacdtest}.
-
-\begin{table}[htbp]
-\caption{Testing of Bullet with HACD}
-\begin{center}
-\begin{tabular}{|r|l|r|l|}
-\hline
-\multicolumn{1}{|l|}{\textbf{Bullet HACD test}} & \textbf{Sleeping Enabled} & \multicolumn{1}{l|}{\textbf{Number of objects}} & \textbf{Time/frame [ms]} \\ \hline
-1 & No & 1024 & 94.665 \\ \hline
-2 & Yes  & 1024 & 78.317 \\ \hline
-3 & No & 512 & 51.9156 \\ \hline
-4 & Yes  & 512 & 30.5515 \\ \hline
-5 & No & 256 & 22.3175 \\ \hline
-6 & Yes  & 256 & 13.298 \\ \hline
-\end{tabular}
-\end{center}
-\label{tab:hacdtest}
-\end{table}
-
-
-\section{Results}
 The result of the simulation can be seen in figure~\ref{fig:hacd0.0} and figure~\ref{fig:tight}.
 \begin{figure}[H]
   \centering
@@ -81,16 +54,61 @@ The result of the simulation can be seen in figure~\ref{fig:hacd0.0} and figure~
 \begin{figure}[H]
   \centering
   \includegraphics[width = 0.8\textwidth]{HACDtight.png}
-  \caption{Close-up of finished result}
+  \caption{Close-up of final result}
   \label{fig:tight}
 \end{figure}
 
+\section{Performance}
+For testing, Utah teapots consisting of twelve submodels were used. Each submodel has
+between 50 and 100 vertices. A timestep of 0.01 seconds was used. All timings
+presented are without rendering. All tests measure simulation
+time and average the result across 2000 iterations. For the first test, Bullets' sleeping was
+disabled, and for the second, the sleeping was left enabled. The results are presented
+in table~\ref{tab:hacdtest}.
+
+\begin{table}[htbp]
+\caption{Testing of Bullet with HACD}
+\begin{center}
+\begin{tabular}{|l|r|l|}
+\hline
+\textbf{Sleeping Enabled} & \multicolumn{1}{l|}{\textbf{Number of objects}} & \textbf{Time/frame [ms]} \\ \hline
+No & 1024 & 94.665 \\ \hline
+Yes  & 1024 & 78.317 \\ \hline
+No & 512 & 51.9156 \\ \hline
+Yes  & 512 & 30.5515 \\ \hline
+No & 256 & 22.3175 \\ \hline
+Yes  & 256 & 13.298 \\ \hline
+\end{tabular}
+\end{center}
+\label{tab:hacdtest}
+\end{table}
+
+
+% \begin{table}[htbp]
+% \caption{Testing of Bullet with HACD}
+% \begin{center}
+% \begin{tabular}{|r|l|r|l|}
+% \hline
+% \multicolumn{1}{|l|}{\textbf{Bullet HACD test}} & \textbf{Sleeping Enabled} & \multicolumn{1}{l|}{\textbf{Number of objects}} & \textbf{Time/frame [ms]} \\ \hline
+% 1 & No & 1024 & 94.665 \\ \hline
+% 2 & Yes  & 1024 & 78.317 \\ \hline
+% 3 & No & 512 & 51.9156 \\ \hline
+% 4 & Yes  & 512 & 30.5515 \\ \hline
+% 5 & No & 256 & 22.3175 \\ \hline
+% 6 & Yes  & 256 & 13.298 \\ \hline
+% \end{tabular}
+% \end{center}
+% \label{tab:hacdtest}
+% \end{table}
+
+
+
 \section{Remarks}
-While the time necessary for the decomposition renders it implausible for online uses
-it is still an excellent tool for a preprocessing step, or a design step.
-The models could be
-decomposed at the start and copies of the same shape could be used, i.e. no additional
-HACD's are performed. For this thesis the result were also saved to an Wavefront Object (.obj) file so simple and quick
+While the time necessary for the decomposition renders it implausible for online uses,
+it is still an excellent tool for a preprocessing step.
+The models can be
+decomposed at the start and copies of the same shape can be used, i.e. no additional
+HACD are performed. For this thesis the results were also saved to an Wavefront Object (.obj) file so that simple and quick
  loading of the decomposed models could be used while testing.
 
 The performance of the whole system simulation, while not phenomenal, is fast enough
@@ -99,12 +117,12 @@ are selected.
 
 The method does handle concave results through the approximate decomposition.
 
-In terms of correctness the approximate decomposition, while good, does not reproduce the objects
-perfectly.
+In terms of accuracy the approximate decomposition, while good, does not reproduce the objects
+with perfect accuracy.
 
 %A concave collision result is portrayed in figure~\ref{fig:concaveHACD}.
 
 \section{Limitations}
-The limitations of this method are mainly concerning the performance. The fact
+The limitations of this method mainly concern performance. The fact
 that the parameters of the HACD might affect the decomposition makes the system
-as a whole less robust.
+on the whole less robust.

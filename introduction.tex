@@ -1,66 +1,68 @@
 \chapter{Introduction}\label{cha:intro}
 
-Synthetic data generation is a subject with increasingly high relevance.
+Synthetic data generation is a subject of increasingly high relevance.
 The data can be used for training and validation of self-learning systems,
-something which is becoming increasingly more popular and useful within vision
-based problems. Solving methods for high speed generation of these datasets
-can greatly increase the productivity and development of these
+something which is becoming increasingly more popular and useful for vision based
+algorithms. Solving methods for high speed generation of these datasets
+can greatly increase the performance and development of these
 types of algorithms.
 
 \section{Purpose}
-For the purpose of generating synthethic data this thesis will investigate the use of physics
+For the purpose of generating synthethic data, this thesis will investigate the use of physics
 simulation for part distribution. The situation investigated in this thesis
-is when several, identical models are 'poured' into a bin and simulated to find their
+is when several identical models are `poured` into a bin and simulated to find their
 final resting distribution. The system in question uses range cameras to detect
-orientation and position of objects randomly distributed in a bin and then guides
+orientation and position of objects randomly distributed in a bin and guides
 a robotic arm to grip the object and remove it from the bin.
 In figure~\ref{fig:plb}, the situation
 the thesis aims to simulate is visualized. Only the distribution of the parts
 will be simulated, i.e. the robotic arm and gripper used for picking the parts will not be simulated.
- For these simulations
-performance is of high interest as generation of large amounts of data unlocks the potential of using machine learning
-for parameter training for systems. Due to the interest for performance a GPU method will
+ For these simulations,
+performance is of great interest as generation of large amounts of data enables the potential of using machine learning
+for parameter training of these systems. Due to the interest in performance a GPU method will
 be investigated and compared to a more traditional CPU based solution.
 
 \begin{figure}[ht]
   \centering
   \includegraphics[width = 0.8\textwidth]{binBlender.png}
-  \caption{The situation which the thesis aims to simulate.}
+  \caption{The situation which the project aims to simulate.}
   \label{fig:plb}
 \end{figure}
 
-\section{Problem Statement}
-How can a GPU rigid body solver be realized and used for synthetic data generation
- and how does it compare against Bullet?
+\section{Problem statement}
+Graphics processors have access to many cores and can solve problems effectively when
+the problem can be parallelized. The thesis investigates the use of a graphics processor
+for rigid body simulations. The suggested implementation will be compared to an
+already established rigid body physics solver.
 
 \section{Limitations}
-Since the system is somewhat chaotic in nature, deviations from a high accuracy
+Since the system is chaotic in nature, deviations from a high accuracy
 simulation in exchange for performance is accepted. The simulation should be reasonably
 accurate
-and the final distribution must be valid. For instance a detailed
-model for the friction might not grant a better final distribution than a simple one.
+and the final distribution must be valid. For instance, a detailed
+friction model might not grant a better final distribution than a simple one.
 Additional limitations are hardware. The methods will be evaluated on the hardware
-provided by SICK IVP. Graphics card: GeForce GTX 960 with 4 GB GDDR5 VRAM.
-CPU: Intel Xeon W3530 at 2.8 GHz.
-Memory: 6 GB RAM.
+provided by SICK IVP. The graphics card used is a GeForce GTX 960 with 4 GB GDDR5 VRAM.
+The processor used is an Intel Xeon W3530 at 2.8 GHz.
+The system has a total of 6 GB RAM.
 
-Initially the Rigid-body GPU pipeline of Bullet 3.x was to be investigated, however
+Initially, the rigid-body GPU pipeline of Bullet 3.x was to be investigated. However,
 it has become apparent that the implementation was more or less abandoned in 2013
 when Erwin Coumans started working for Google instead of AMD. While operational,
-no API for it exists. Due to it's state it is excluded from the thesis.
-A self-implemented GPU rigid body solver will be implemented and compared to Bullet.
+no API for it exists. Due to its state it is excluded from the thesis.
+A self-implemented GPU rigid body solver will be implemented and compared to Bullet 2.83.
 
 \section{Methodology}
 Validation for physics simulations is a very difficult topic. Since the aim for
 the thesis is to produce realistic enough distributions we do not need to focus
-on absolutely realistic results but can instead evaluate the results in terms of
+on absolutely realistic results, and can instead evaluate the results in terms of
 a few key properties. Of interest are: performance, for the potential use of machine learning; correctness,
-as the simulations need to be plausible to give close to real life scenarios; concave collision, since the objects might
+as the simulations need to be plausible enough to get close to real life scenarios; concave collision, since the objects might
  be concave and contain holes or other cavities.
 
 The methods will be evaluated in a comparative fashion against one another.
 
 A CPU method, HACD will be implemented using
 BulletPhysics 2.83, an open-source, permissively licensed, optimized game physics
-library. The second method will be a GPU method implemented from scratch using a
-voxelized particle method with impulses.
+library. The second method will be a self-implemented GPU based method using
+voxelized particles with impulses.

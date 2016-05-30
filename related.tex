@@ -1,15 +1,15 @@
 \chapter{Related Work}\label{cha:related}
-Within this chapter related work to physics simulations and GPU based solutions are
+In this chapter work related to physics simulations and GPU based solutions are
 presented.
-\section{Spherical Decomposition}\label{sec:decomp}
+\section{Spherical decomposition}\label{sec:decomp}
 \cite{gpugems} presents a method for collision detection and response using spherical
-decomposition. By subdividing the geometry into a collection of spheres one gets an
-approximation of the shape. Since each new geometry is locally convex, collision
-detection is much simplified, but the global result of the decomposition still have
-concave properties. Since each new geometry is the same primitive only
-one type of collision detection and response is needed, spheres in this case.
-For an example of geometries
-decomposed in this manner see figure~\ref{fig:bunnies}.
+decomposition. By subdividing the object into a collection of spheres one gets an
+approximation of the shape. Since each new collision shape is locally convex, collision
+detection is much simplified, but the global result of the decomposition still has
+concave properties. Since each new collision shape is the same primitive, only
+one type of collision detection and response is needed; in this case spheres.
+For an example of objects
+decomposed in this manner, see figure~\ref{fig:bunnies}.
 
 \begin{figure}[H]
   \centering
@@ -19,17 +19,17 @@ decomposed in this manner see figure~\ref{fig:bunnies}.
 \end{figure}
 
 \subsection{Spring-damper model}
-Spring-damper model is the model for collision response described in~\cite{gpugems} and by~\cite{fossum}.
-The model has the benefit of being quite easy to implement on both CPU and GPU.
+The spring-damper model is a model for collision response described in~\cite{gpugems} and by~\cite{fossum}.
+This model has the benefit of being quite easy to implement on both CPU and GPU.
 However, since there are two design parameters, the spring coefficient and the damping
-constant, the system can be hard to tune. Often a parameter constellation that works
-fine for one system will fail for another.
+constant, the system can be difficult to tune. Often a parameter constellation that works
+well for one system will fail for another.
 
 The equations below describe how the force and torque can be derived for this type
-of model. The equations describe the forces for collision between sphere i and j,
-where k is the spring constant, c the damping constant and d the
+of model. The equations describe the forces for collision between sphere $i$ and $j$,
+where $k$ is the spring constant, $c$ the damping constant and $d$ the
 diameter of the sphere. In equation~\ref{eq:tangent}, $\hat{r}$ refers to the
-position of the particle relative to the body's center.
+position of the particle relative to the center of the body.
 
 \begin{equation}
   \vec{f}_{i,spring} = -k(d-|\vec{r}_{ij}|)\frac{\vec{r}_{ij}}{|\vec{r}_{ij}|}
@@ -48,25 +48,25 @@ position of the particle relative to the body's center.
 \end{equation}
 
 Note that the equations above are mass independent which might be one of the
-reasons for it's common use with the particle method.
+reasons for their common use with the particle method.
 
-This method has two unknown parameters, c and k, which must be tuned for the
-specific system for stability. Often these parameters are decided through testing
+This method has two unknown parameters, $c$ and $k$, which must be tuned for the
+specific system for stability. Often these parameters are determined through testing
 and the tests need to be redone for new setups.
 
 \section{Multiple contacts in sequential solvers}
-When solving with multiple contacts between a body pair one can rewind time to
+When solving multiple contacts between a body pair one can rewind time to
 find the first collision
 that occurred in the system (a single body pair, or globally), process it first
 then step forward until the next collision and so forth. However this method can
-be quite time consuming and lack parallelism since we get an ordering in the solver.
-If we do not back the system in time and
+be time consuming and is not trivial to parallelize since the steps in the solver are inherently serial.
+If we do not revert the system in time, to the initial collision, and
 instead simply solve all collisions we have currently and take some special care
 towards interpenetration we would end up with an incorrect simulation. The problem
-becomes apparent through the following example.
+becomes apparent with the following example.
 In figure~\ref{fig:ballsExpected} we see the expected result and in
-figure~\ref{fig:noSplit} we see the result if one uses a naive implementation of
-parallel impulses.
+figure~\ref{fig:noSplit} we see the result if a naive implementation of
+parallel impulses is used.
 
 \begin{figure}[H]
   \centering
@@ -84,26 +84,28 @@ parallel impulses.
 \end{figure}
 
 This problem can be remedied by only solving one impulse between a body pair at a time.
-This can be achieved as above stated by either backing up time until there
-is only one collision, or a few collisions and then solve one of them, chosen
-arbitrarily. This gives rise to a order dependent system, and is something which
+This can be achieved as stated above by either backing up time until there
+is only one or a few collision(s), and then solve one of them, chosen
+arbitrarily. This gives rise to an order dependent system, and is something which
 makes for difficult realizations in parallel algorithms. Another approach popularized
-by Erin Catto in his Box2D is 'Sequential Impulses' which solves the worst interpenetration
-on each respective body pair, updates the velocities and iterates for a few iterations.
+by Erin Catto in his Box2D is \textit{Sequential Impulses} which solves the worst interpenetration
+on each respective body pair, updates the velocities and reiterates the solution a few times.
 One interesting aspect here is that negative impulses are allowed in intermediate
-results. However as the name suggests it is most suitable for a sequential implementation.
-Both of the methods above suggests that only one collision between a body pair should
-be solved at a time which leads to sequential processing. For more details see \cite{catto}.
+results. However, as the name suggests, it is most suitable for a sequential implementation.
+Both of the methods above suggest that only one collision between a body pair should
+be solved at a time, which leads to sequential processing. For more details see \cite{catto}.
 This method could arguably be parallelized in the sense that each body could be
-processed in parallel, however a different approach is used for this thesis.
+processed in parallel. However, a different approach is used for this project since
+concave collisions is one of the aims for this thesis and extending this method to
+handle concave collisions is non-trivial.
 
 \section{Mass splitting}\label{sec:massSplit}
-\cite{tonge} describes, in their paper, a parallel constraint based solver
+\cite{tonge} describes a parallel constraint based solver
 using mass splitting, where objects are split and solved independently and superpositioned
 for the final result.
 
-A similar approach where we split the mass prior to
-calculating the impulses by the number of collision between the two bodies. The
+A similar approach would be to split the mass prior to
+calculating the impulses by the number of collisions between the two bodies. The
 calculated impulses are then applied to the original object.
 
 \begin{figure}[H]
@@ -117,9 +119,9 @@ calculated impulses are then applied to the original object.
 For this method to be implementable we need to count the number of collisions between
 every body pair. This is described in further detail in section~\ref{sec:colMatrix}.
 
-With $\vec{j}$ defined as in equation~\ref{eq:finalJ} divide $\vec{j}$ by
+With the impulse $\vec{j}$ defined as in equation~\ref{eq:finalJ},$\vec{j}$ is divided by
 the number of collisions between the collision pair, here defined as $k$. The final modification to
-$\vec{j}$ before applying it to the bodies then becomes the following.
+$\vec{j}$ before applying it to the bodies then becomes the following:
 
 \begin{equation}
   \vec{j}_{mass split} = \frac{\vec{j}}{k}
@@ -129,23 +131,24 @@ While inspired by the mass splitting technique from~\cite{tonge}
 this is simply an application of the superposition-principle
 of forces.
 
-\section{Collision Detection}\label{sec:gridCD}
+\section{Collision detection}\label{sec:gridCD}
 \subsection{Spatial partitioning}
 ~\cite{gpugems} suggests spatial partitioning
 by ways of a uniform grid for collision detection. This method is especially suitable
-for the spherical decomposition since for fixed sphere radius we can select an optimized
-grid size. In addition~\cite{gpugems},~\cite{green} and~\cite{fastnearest} claim that sorting
+for the spherical decomposition since we can select an optimized
+grid size for a fixed sphere radius. In addition~\cite{gpugems},~\cite{green} and~\cite{fastnearest} claim that sorting
 the collisions by bin number increases memory coherence and overall performance.
+
 \subsection{Parallel Sweep-And-Prune}
-Parallel Sweep-And-Prune as investigated by~\cite{gpupipedev}, which in turn cites~\cite{liu2010}, %Find this source
-discuss a single axis Sweep-And-Prune algorithm on the GPU for broadphase collision
+Parallel Sweep-And-Prune as investigated by~\cite{gpupipedev}, which in turn is based on~\cite{liu2010}, %Find this source
+discusses a single axis Sweep-And-Prune algorithm on the GPU for broadphase collision
 detection using bounding boxes and the Separating-Axis-Theorem. For more details
 concerning the basics of Sweep-And-Prune, turn to the work of~\cite{SAPPierre}.
 
 \section{Time-stepping schemes}
 \cite{Lembcke} describes using Guendelman's time stepping
-algorithm. By, for example, detecting when the velocity is very small one can
-calculate the contact impulse by setting $\epsilon = 0$.
+algorithm. By detecting when the velocity is very small the contact impulses can be
+calculated by setting $\epsilon = 0$.
 Guendelman's time stepping algorithm is provided in pseudocode below, in accordance
 to what is described in~\cite{guendelman}.
 
@@ -166,15 +169,15 @@ to what is described in~\cite{guendelman}.
 \section{Nonconvex collision with stacking}
 \cite{guendelman} present in their paper \textit{"Nonconvex Rigid Bodies with Stacking"}
 a scenario very similar to what this thesis aim to produce.
-While the end results are impressive in terms of simulating the scenario the performance
-is not particularly good. Dropping 500 rings consisting of 320 triangles averaged 3 minutes per frame.
+While the end results reach high physical accuracy the runtime is not suitable for realtime applications.
+ Dropping 500 rings consisting of 320 triangles averaged 3 minutes per frame.
 
-In the same paper~\cite{guendelman} presents the Shock Propagation algorithm.
-By constructing a contact graph from the static objects in the scene, see figure~\ref{fig:cont},
-then solving the objects in contact with the static objects first, then change their
+In the same paper~\cite{guendelman} present the Shock Propagation algorithm.
+By constructing a contact graph from the static objects in the scene (see figure~\ref{fig:cont})
+then solving the objects in contact with the static objects first, followed by changing their
 mass making them static and solve the next layer and so forth. This lead to much
 higher stability in simulations, but does however introduce a sequential dependency
-since each level of the graph need to be processed before the next.
+since each level of the graph needs to be processed before the next.
 
 \begin{figure}[H]
   \centering
@@ -184,18 +187,19 @@ since each level of the graph need to be processed before the next.
 \end{figure}
 
 \section{Hierarchical Approximate Convex Decomposition}
-A popular method for collision detection concerning complex concave objects
-are convex decomposition. Reasons for the methods' popularity may be it's relative
-simplicity in theory. Dividing the concave model down into subsets, which are
-all convex can give composite shapes that are concave yet still work with the
+A popular method for collision detection of complex concave objects
+are convex decomposition. Reasons for the popularity of the method may be its relative
+simplicity in theory. Dividing the concave model into convex subsets
+can give composite shapes that are concave, yet still work with the
 traditional collision detection and response models since they work on convex
-sub-shapes, see figure~\ref{fig:hacdSimple}, where an initially concave shape has
+sub-shapes. In figure~\ref{fig:hacdSimple} an initially concave shape has
 been subdivided in smaller convex shapes. Creating composite shapes in a physics
 engine is fairly straightforward as each submodel contributes to the inertia and
-mass of the object. Each objects previous collision shape can be used or a new collision
-shape for the whole object can be recalculated. Each submodel's forces from collisions
-contribute to the whole objects' movement instead of it's own.
-There are some automatic methods for convex decompositions, among them HACD developed by~\cite{mamou}.
+mass of the object. The previous collision shape of each object can be used, or a new collision
+shape for the whole object can be recalculated. The forces of each submodel
+contribute to the movement of the whole model instead of the submodel itself.
+There are some automatic methods for convex decompositions, among them hierarchical
+ approximate convex decomposition (HACD) developed by~\cite{mamou}.
 
 \begin{figure}[H]
   \centering
@@ -204,7 +208,7 @@ There are some automatic methods for convex decompositions, among them HACD deve
   \label{fig:hacdSimple}
 \end{figure}
 
-\cite{HACD} investigated the use of HACD and found it to produce fewer hulls
+\cite{HACD} investigated the use of HACD and found it produced fewer hulls
 than previous methods while still approximating the original objects well.
 Mamou is currently working on a newer version of HACD called
-V-HACD, which among other things include GPU acceleration.
+V-HACD, which among other things includes GPU acceleration.

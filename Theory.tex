@@ -1,18 +1,17 @@
 \chapter{Theory}\label{cha:theory}
-This chapter lay the foundation of the equations needed to perform physics simulations.
-\section{Rigid Body Dynamics}
+This chapter describes the fundamentals of the equations needed to perform physics simulations.
+\section{Rigid body dynamics}
 According to~\cite{baberrigid} there are three major methods for solving rigid body
 dynamics; penalty methods, impulse methods and constraint based methods.
-In common with the methods for rigid body dynamics is the need for the governing laws of
-motion which move the simulation forward in time. In addition some form of collision detection
+In common with most methods for rigid body dynamics is the need for the governing laws of
+motion which move the simulation forward in time. In addition methods for collision detection
 and collision response is needed. The collision detection, due to its planned use for GPU collision
 detection, will be limited to a uniform grid/sort-based method, as described by~\cite{gpugems}.
-The method of using mass splitting and spherical decomposition are very similar
+The methods of using mass splitting and spherical decomposition are very similar
 to what~\cite{flex} and~\cite{bulletPipeline} have presented with regards to
-constraint based physics. In this thesis I describe a method for using it with
-impulse based physics while keeping the calculations on the GPU. When describing the laws of motion and equations
-for updating the state variables the following diagram can be referenced.
-
+constraint based physics. This thesis will describe a method for using it with
+impulse based physics while keeping the calculations on the GPU. The laws of motion and equations
+for updating the state variables are summarized in figure~\ref{fig:diag}.
 \begin{figure}[H]
   \centering
   \includegraphics[width = 0.8\textwidth]{physicsscheme.png}
@@ -21,8 +20,7 @@ for updating the state variables the following diagram can be referenced.
 \end{figure}
 
 \subsection{Laws of motion}
-The following equations govern the motions of rigid bodies, these are quite
-nicely summarized by~\cite{hansson}. They are repeated here for reference.
+The following equations govern the motions of rigid bodies are summarized by~\cite{hansson}. They are repeated here for reference.
 
 \begin{equation}
   \frac{d\vec{P}}{dt}=m\frac{d\vec{v}}{dt} = \vec{f}
@@ -45,13 +43,13 @@ nicely summarized by~\cite{hansson}. They are repeated here for reference.
 \end{equation}
 
 \subsection{Integrating the laws of motion discretely}
-To use the equations in the previous subsection we need to be able to use them
-discretely, for this purpose we need a discrete integration technique. The
-simplest among them is the Euler step. With a fixed time step $\Delta t$, we
-get the following equations that we can use to update the simulation one step
-forward. The update for the quaternions are based on the description given by~\cite{fossum}.
+The equations in the previous subsection need to be calculated in discrete time steps.
+For this purpose we need a discrete integration technique. The
+simplest among them is the Euler step. With a fixed time step, $\Delta t$,
+equations~\ref{eq:1}~to~\ref{eq:2} can be used to move the simulation one step forward in time.
+The update for the quaternions are based on the description given by~\cite{fossum}.
 
-\begin{equation}
+\begin{equation}\label{eq:1}
   \vec{v}_{t + \Delta t} = \vec{v}_{t}+\frac{\vec{P}}{m}
 \end{equation}
 \begin{equation}
@@ -62,13 +60,13 @@ forward. The update for the quaternions are based on the description given by~\c
   \vec{\omega}_{t + \Delta t} = \vec{w}_t+\vec{I}^{-1}\vec{\tau}\Delta t
 \end{equation}
 
-\begin{equation}
+\begin{equation}\label{eq:2}
   \vec{x}_{t + \Delta t} = \vec{x}_{t} + \vec{v}_t\Delta t
 \end{equation}
 
 \section{Impulse method}\label{sec:imp}
-To use the impulse method we need to solve the impulse j. ~\cite{baraff} explains the details
-and derivations of the results below and I recommend the interested reader to look through
+To use the impulse method we need to solve the impulse $\vec{j}$. ~\cite{baraff} explains the details
+and derivations of the results below, and it is recommended that the interested reader look through
 his work.
 
 Solving physics using the impulse method has the benefit of having few external tuning
@@ -77,8 +75,8 @@ $\mu$ and the bias factor.
 
 The following equation can be used to calculate the impulse created in the
 collision between body A and body B.
-Please note that $\vec{j} = j\vec{\hat{n}}$ holds for all collisions, the direction
-of $\vec{j}$ is always parallel to the collision normal by design.
+Please note that $\vec{j} = j\vec{\hat{n}}$ holds for all collisions and that the direction
+of $\vec{j}$ is always parallel to the collision normal.
 
 \begin{equation}
   \vec{j} = \frac{-(1+\epsilon)\vec{v}_{rel,\vec{\hat{n}}}}
@@ -86,7 +84,7 @@ of $\vec{j}$ is always parallel to the collision normal by design.
   +\vec{I}_B^{-1}(\vec{r}_B\cross\vec{\hat{n}})\cross\vec{r}_B)}
 \end{equation}
 
-The two following equations can be used to update the bodies' states.
+The two following equations can be used to update the states of the bodies.
 
 \begin{equation}
   \Delta\vec{v}_A = \vec{j}m_A^{-1}
@@ -97,7 +95,7 @@ The two following equations can be used to update the bodies' states.
 \end{equation}
 
 According to~\cite{hansson}, the same equations with a simple friction model can
-be written as following.
+be written as follow;
 
 \begin{equation}
   \Delta\vec{v}_A = \vec{j}m_A^{-1}(\vec{\hat{n}} - \mu\vec{\hat{t}})
@@ -107,7 +105,7 @@ be written as following.
   \Delta\vec{\omega}_A = \vec{j}\vec{I}_A^{-1}(\vec{r}_A\cross(\vec{\hat{n}}-\mu\vec{\hat{t}}))
 \end{equation}
 
-With j redefined as the following.
+With $\vec{j}$ redefined as the following:
 
 \begin{equation}\label{eq:j}
   \vec{j} = \frac{-(1+\epsilon)\vec{v}_{rel,\vec{\hat{n}}}}
@@ -115,17 +113,18 @@ With j redefined as the following.
   +\vec{I}_B^{-1}(\vec{r}_B\cross(\vec{\hat{n}}-\mu\vec{\hat{t}}))\cross\vec{r}_B)}
 \end{equation}
 
-In the equations the tangent can be calculated as described below.
+In the equations, the tangent can be calculated as described below:
 
 \begin{equation}
   \vec{\hat{t}}=\frac{\vec{v}_{rel}-\vec{\hat{n}}(\vec{\hat{n}}\bullet\vec{v}_{rel})}{|\vec{v}_{rel}-\vec{\hat{n}}(\vec{\hat{n}}\bullet\vec{v}_{rel})|}
 \end{equation}
 
 \subsection{Replacing force with impulses}
-Assuming that we have the impulse created between body A and body B the following
-equation can be used to update the states, the impulse is applied along the collision normal.
-The equations regarding velocity updates are given below. In the equations below, $\vec{r}$,
-is referring to the vector to the body's mass center. Please refer to figure~\ref{fig:diag}.
+Assuming that we have the impulse created between body A and body B, the following
+equations can be used to update the state. The impulse is applied along the collision normal.
+The equations regarding velocity updates are given below, where $\vec{r}$
+is referring to the vector to the body's mass center (also refer to figure~\ref{fig:diag}).
+%Might want to explain why using quaternions is a good idea.
 
 \begin{equation}
   \vec{\tau} = \vec{r}\cross\vec{f} = \vec{r}\cross\frac{\vec{j}}{\Delta t}
@@ -181,10 +180,9 @@ With the quaternion defined as in equation~\ref{eq:quatDef}, the multiplication 
 
 The equations concerning quaternion updates closely follow what is described by~\cite{fossum}.
 \subsection{Velocity biasing}
-Since the equations laid out in the section above, assume a fixed time step there
-arises situations where moving two spheres forward in time result in the spheres
-interpenetrating. This situation has to either be resolved or somehow avoided.
-To avoid this, one can calculate the first time of impact in the system globally and
+Using the equations as laid out above with a fixed time-step, a situation might arise
+where two moving spheres interpenetrate each other. This situation has to either be resolved or somehow avoided.
+To avoid it, one can calculate the first time of impact in the system globally and
 resolve the collision at that point in time. This thesis will focus on how to resolve
 the interpenetrations instead, due to time-backing not being particularly suitable
 for parallel solvers or performance.
@@ -222,19 +220,19 @@ With this, equation~\ref{eq:j} is modified to read the following.
 \end{equation}
 
 \subsection{Inertia matrix}
-To be able to simulate the rotations of the objects properly we need the objects
-inherent property to resist rotation, the inertia tensor.
+To be able to simulate the rotations of the objects properly we need the inherent
+property of the object to resist rotation, the inertia tensor.
 In 2D this is simply a single value, at least when considering rotation around
-the center of mass. When moving to 3D we instead use a 3-by-3 matrix called the
-inertia tensor. According to~\cite{ragnemalmscream} we can, when the objects initial
-position is aligned with the objects principal axes, always write the inertia tensor
+the center of mass. However, in 3D we instead use a $3x3$ matrix called the
+inertia tensor. According to~\cite{ragnemalmscream}, when the objects initial
+position is aligned with the objects principal axes, we can always write the inertia tensor
 as a diagonal matrix.
 
-By voxelizing the object which we seek the inertia tensor of and treating each voxel
-as a point mass during the calculation we can sum over all the point masses and reach
-an approximation of the inertia tensor. The method can be found described in
+By voxelizing the object for which we seek the inertia tensor of and treating each voxel
+as a point mass during the calculation, we can sum over all the point masses and reach
+an approximation of the inertia tensor. The method is described in
  'So How Can We Make Them Scream' by~\cite{ragnemalmscream}.
-J can be calculated as following.
+$\vec{j}$ can be calculated as following.
 
  \begin{equation}
   \vec{J} = \sum_i
@@ -246,10 +244,10 @@ J can be calculated as following.
  \end{equation}
 
  This method gets quite
- good results but is of course dependent on how finely one decomposes the object.
+ good results but relies on how finely decomposed the object is.
  Below is a comparison of theoretical versus approximated inertia tensor of a cube.
  Only one of the three diagonal components are presented since the object is symmetrical
- along all three axes the inertia tensor will have the same value along the diagonal.
+ along all three axes, thus the inertia tensor will have the same value along the diagonal.
  One can note that the inertia reaches a reasonable approximation quite quickly.
 
 
